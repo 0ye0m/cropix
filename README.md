@@ -157,5 +157,5 @@ Production_CROPIX/
 We welcome contributions to CROPIX! Please refer to our [Contributing Guidelines](CONTRIBUTING.md) for more details on how to get involved.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
