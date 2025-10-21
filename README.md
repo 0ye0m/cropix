@@ -41,30 +41,25 @@ The backend of CROPIX is a Python-based API that serves machine learning models 
 Visit our website at [https://cropixbitlyfe.com](https://cropixbitlyfe.com) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
 
 ### 1. Crop Recommendation
-- **Purpose**: Get recommendations for the most suitable crops to grow based on your soil conditions.
 - **How to Use**: Navigate to the 'Crop Recommendation' section. Input your soil's nitrogen, phosphorus, and potassium levels, pH, rainfall, temperature, and humidity. The system will then suggest the best crops for your environment.
 
 ### 2. Fertilizer Recommendation
-- **Purpose**: Determine the optimal fertilizer type and quantity for your specific crop and soil.
 - **How to Use**: Go to the 'Fertilizer Recommendation' section. Select your crop and provide details about your soil's nutrient content. CROPIX will recommend the most effective fertilizer.
 
 ### 3. Soil-Crop Recommendation
-- **Purpose**: Receive integrated recommendations that consider both soil health and crop suitability.
 - **How to Use**: In the 'Soil-Crop Recommendation' area, enter your soil parameters. The system will analyze this data to provide a comprehensive recommendation for both soil management and crop choices.
 
 ### 4. Disease Detection
-- **Purpose**: Identify potential diseases affecting your crops through image analysis.
 - **How to Use**: Upload an image of your affected crop in the 'Disease Detection' section. Our AI model will analyze the image and provide a diagnosis, along with potential remedies.
 
 ### 5. Market Forecast
-- **Purpose**: Get predictions on market trends for agricultural produce to help with planning and sales.
 - **How to Use**: Visit the 'Market Forecast' section to view upcoming trends and price predictions for various crops.
 
 ### 6. Weather Prediction
-- **Purpose**: Access relevant weather forecasts to aid in daily farming operations.
 - **How to Use**: Check the 'Weather Prediction' section for localized weather information and forecasts that can impact your farming activities.
 
 By utilizing these features, you can make more informed decisions, improve crop yield, and enhance the sustainability of your farming practices.
+
 
 ## Local Installation
 
