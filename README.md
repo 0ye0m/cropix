@@ -5,8 +5,8 @@ CROPIX is an intelligent agricultural platform designed to empower farmers with 
 
 ## Created By
 CROPIX was created by 2nd-year students of VIT Bhopal, India:
-- **Rachit Tiwari**: ML Model Engineer (Backend Developer, developed LSTM and CNN models) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)]([https://www.linkedin.com/in/rachittiwari](https://www.linkedin.com/in/rachit-tiwari-3319ba312/))
-- **Shaikh Mohammad Warsi**: UI/UX Designer (Frontend Developer, designed UI/UX and developed KNN model) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)]([https://www.linkedin.com/in/shaikhwarsi](https://www.linkedin.com/in/shaikh-mohammad-warsi-141532271/))
+- **Rachit Tiwari**: ML Model Engineer (Backend Developer, developed LSTM and CNN models) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)]([https://www.linkedin.com/in/rachittiwari](https://www.linkedin.com/in/rachit-tiwari-3319ba312/))
+- **Shaikh Mohammad Warsi**: UI/UX Designer (Frontend Developer, designed UI/UX and developed KNN model)[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)] (https://www.linkedin.com/in/shaikh-mohammad-warsi-141532271/))
 
 ## Features
 - **Crop Recommendation**: Suggests suitable crops based on soil conditions and environmental factors.
