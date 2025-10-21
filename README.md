@@ -36,7 +36,32 @@ The backend of CROPIX is a Python-based API that serves machine learning models 
     - **Matplotlib & Seaborn**: For data visualization and analysis (likely used during model development).
     - **Joblib**: For efficient saving and loading of Python objects, especially large NumPy arrays, used for trained machine learning models.
 
-## Installation
+## How to Use CROPIX
+
+Visit our website at [https://cropixbitlyfe.com](https://cropixbitlyfe.com) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
+
+### 1. Crop Recommendation
+- **How to Use**: Navigate to the 'Crop Recommendation' section. Input your soil's nitrogen, phosphorus, and potassium levels, pH, rainfall, temperature, and humidity. The system will then suggest the best crops for your environment.
+
+### 2. Fertilizer Recommendation
+- **How to Use**: Go to the 'Fertilizer Recommendation' section. Select your crop and provide details about your soil's nutrient content. CROPIX will recommend the most effective fertilizer.
+
+### 3. Soil-Crop Recommendation
+- **How to Use**: In the 'Soil-Crop Recommendation' area, enter your soil parameters. The system will analyze this data to provide a comprehensive recommendation for both soil management and crop choices.
+
+### 4. Disease Detection
+- **How to Use**: Upload an image of your affected crop in the 'Disease Detection' section. Our AI model will analyze the image and provide a diagnosis, along with potential remedies.
+
+### 5. Market Forecast
+- **How to Use**: Visit the 'Market Forecast' section to view upcoming trends and price predictions for various crops.
+
+### 6. Weather Prediction
+- **How to Use**: Check the 'Weather Prediction' section for localized weather information and forecasts that can impact your farming activities.
+
+By utilizing these features, you can make more informed decisions, improve crop yield, and enhance the sustainability of your farming practices.
+
+
+## Local Installation
 
 ### Prerequisites
 Before you begin, ensure you have the following installed:
@@ -100,6 +125,8 @@ Production_CROPIX/
 ├── backend/                # FastAPI backend with ML models
 │   ├── main.py             # Main FastAPI application
 │   ├── requirements.txt    # Backend Python dependencies
+│   ├── API_DOCUMENTATION.md # API endpoint documentation
+│   ├── MODEL_DOCUMENTATION.md # Machine learning model documentation
 │   ├── Trained_models/     # Stored machine learning models
 │   └── ...
 ├── frontend/               # Next.js frontend application
@@ -118,12 +145,17 @@ Production_CROPIX/
 │   └── ...
 ├── Datasets/               # Datasets used for training (e.g., CSV files)
 ├── MODELS/                 # Jupyter notebooks or scripts for model development
-├── Trained_models/         # Root level trained models (might be duplicated in backend)
 └── README.md               # This file
 ```
 
+## Documentation
+- [API Documentation](backend/API_DOCUMENTATION.md): Detailed information about the backend API endpoints.
+- [Model Documentation](backend/MODEL_DOCUMENTATION.md): In-depth documentation for each machine learning model used in the project.
+- [Contributing Guidelines](CONTRIBUTING.md): Information on how to contribute to the project.
+
 ## Contributing
-We welcome contributions to CROPIX! Please feel free to fork the repository, create a new branch, and submit a pull request with your enhancements or bug fixes.
+We welcome contributions to CROPIX! Please refer to our [Contributing Guidelines](CONTRIBUTING.md) for more details on how to get involved.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details (if applicable).
+This project is licensed under the MIT License - see the LICENSE file for details.
+
