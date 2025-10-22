@@ -43,7 +43,7 @@ The backend of CROPIX is a Python-based API that serves machine learning models 
 
 ## How to Use CROPIX
 
-Visit our website at [https://cropixbitlyfe.com](https://cropixbitlyfe.com) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
+Visit our website at [https://cropixbitlyfe.com](https://cropixbitlyfe.vercel.app) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
 
 ### 1. Crop Recommendation
 - **How to Use**: Navigate to the 'Crop Recommendation' section. Input your soil's nitrogen, phosphorus, and potassium levels, pH, rainfall, temperature, and humidity. The system will then suggest the best crops for your environment.
