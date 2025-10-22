@@ -40,4 +40,10 @@ This document provides details about the machine learning models used in the CRO
 - **Type:** Long Short-Term Memory (LSTM) Neural Network
 - **Training Methodology:** (To be filled: Describe the LSTM architecture, time-series data preprocessing, sequence length, and training parameters.)
 - **Dataset:** (To be filled: Describe the time-series dataset used for training, including historical price data.)
-- **Performance Metrics:** (To be filled: Provide metrics such as Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and forecasting accuracy.)
+## 6. Weather Forecast (API Integration)
+- **Purpose:** Provides weather forecasts for a given city and number of days.
+- **Type:** API Integration (weatherapi.com)
+- **Implementation Details:** Fetches weather data directly from weatherapi.com using an API key.
+- **Endpoint:** `/weather_forecast/` and `/weather_forecast_lstm/` (both currently use direct API calls)
+- **Input:** City name and number of days for the forecast.
+- **Output:** Daily forecast summary including min/max/avg temperature, humidity, chance of rain, and condition.
