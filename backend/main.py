@@ -5,17 +5,14 @@ import joblib
 import numpy as np
 import pandas as pd
 import os
-import tensorflow as tf # type: ignore
-from tensorflow.keras.models import load_model # type: ignore
-from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
+import tensorflow as tf  # type: ignore
+from tensorflow.keras.models import load_model  # type: ignore
+from tensorflow.keras.preprocessing.image import ImageDataGenerator  # type: ignore
 from sklearn.preprocessing import LabelEncoder
 from dotenv import load_dotenv
 import requests
 import json
 from sklearn.preprocessing import MinMaxScaler
-import os
-import numpy as np
-import tensorflow as tf
 from PIL import Image
 import io
 import base64
@@ -24,7 +21,7 @@ import uuid
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",  # Allow requests from your frontend
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
@@ -35,6 +32,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Load models
 CROP_YIELD_MODEL = joblib.load('Trained_models/CROP_YIELD_MODEL.joblib')
 SOIL_CROP_RECOMMENDATION_MODEL = joblib.load('Trained_models/Soil_crop_recom.joblib')
@@ -63,11 +61,13 @@ class CropYieldInput(BaseModel):
     Pesticide: float
     Annual_Rainfall: float
 
+
 @app.post("/predict_crop_yield/")
 async def predict_crop_yield(input: CropYieldInput):
     df_input = pd.DataFrame([input.dict()])
     prediction = CROP_YIELD_MODEL.predict(df_input)[0]
     return {"predicted_yield": prediction.item()}
+
 
 class SoilCropRecommendationInput(BaseModel):
     N: float
@@ -78,52 +78,55 @@ class SoilCropRecommendationInput(BaseModel):
     ph: float
     rainfall: float
 
+
 @app.post("/recommend_soil_crop/")
 async def recommend_soil_crop(input: SoilCropRecommendationInput):
     df_input = pd.DataFrame([input.dict()])
     prediction_label = SOIL_CROP_RECOMMENDATION_MODEL.predict(df_input)[0]
     return {"recommended_crop": prediction_label}
 
+
 class DiseaseDetectionInput(BaseModel):
     image_base64: str
 
+
 @app.post("/detect_disease/")
 async def detect_disease(input: DiseaseDetectionInput):
-    from PIL import Image
-    import io
-    import base64
-    import uuid
-
     try:
         # Decode the base64 string
         image_data = base64.b64decode(input.image_base64)
         image = Image.open(io.BytesIO(image_data))
 
-        # Save the image temporarily
+        # Save temporarily in /tmp (Hugging Face writable dir)
         temp_filename = f"temp_image_{uuid.uuid4()}.png"
-        temp_filepath = os.path.join("temp_images", temp_filename)
-        os.makedirs("temp_images", exist_ok=True)
+        temp_filepath = os.path.join("/tmp", temp_filename)
         image.save(temp_filepath)
 
-        img = tf.keras.preprocessing.image.load_img(temp_filepath, target_size=(256, 256)) # type: ignore
-        img_array = tf.keras.preprocessing.image.img_to_array(img) # type: ignore
+        # Preprocess
+        img = tf.keras.preprocessing.image.load_img(temp_filepath, target_size=(256, 256))  # type: ignore
+        img_array = tf.keras.preprocessing.image.img_to_array(img)  # type: ignore
         img_array = np.expand_dims(img_array, axis=0)
         img_array /= 255.0
 
+        # Predict
         predictions = DISEASE_DETECTION_MODEL.predict(img_array)
         predicted_class_index = np.argmax(predictions)
         predicted_class = DISEASE_CLASSES[predicted_class_index]
         confidence = float(np.max(predictions))
 
-        # Clean up the temporary file
+        # Clean up
         os.remove(temp_filepath)
+
         return {"predicted_disease": predicted_class, "confidence": confidence}
+
     except Exception as e:
         return {"error": str(e)}
+
 
 class LSTMWeatherForecastInput(BaseModel):
     city: str
     days: int
+
 
 @app.post("/weather_forecast_lstm/")
 async def weather_forecast_lstm(input: LSTMWeatherForecastInput):
@@ -150,9 +153,11 @@ async def weather_forecast_lstm(input: LSTMWeatherForecastInput):
         })
     return {"forecast": forecast_summary}
 
+
 class WeatherForecastInput(BaseModel):
     city: str
     days: int
+
 
 @app.post("/weather_forecast/")
 async def weather_forecast(input: WeatherForecastInput):
@@ -179,21 +184,29 @@ async def weather_forecast(input: WeatherForecastInput):
         })
     return {"forecast": forecast_summary}
 
+
 class FertilizerRecommendationInput(BaseModel):
     Crop: str
     Current_N: float
     Current_P: float
     Current_K: float
 
+
 @app.post("/recommend_fertilizer/")
 async def recommend_fertilizer(input: FertilizerRecommendationInput):
     df_input = pd.DataFrame([input.dict()])
     prediction = FERTILIZER_RECOMMENDATION_MODEL.predict(df_input)[0]
-    return {"recommended_N": prediction[0].item(), "recommended_P": prediction[1].item(), "recommended_K": prediction[2].item()}
+    return {
+        "recommended_N": prediction[0].item(),
+        "recommended_P": prediction[1].item(),
+        "recommended_K": prediction[2].item()
+    }
+
 
 class MarketPriceForecastInput(BaseModel):
     crop_name: str
     weeks_to_forecast: int
+
 
 @app.post("/forecast_market_prices/")
 async def forecast_market_prices(input: MarketPriceForecastInput):
@@ -206,26 +219,28 @@ async def forecast_market_prices(input: MarketPriceForecastInput):
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(df_historical)
 
-    n_steps = 8  # This must match the model's training configuration
+    n_steps = 8  # Must match training config
     n_features = df_historical.shape[1]
-
     last_known_data = scaled_data[-n_steps:]
     current_batch = last_known_data.reshape((1, n_steps, n_features))
-    forecast = []
 
+    forecast = []
     for _ in range(input.weeks_to_forecast):
         current_pred = model.predict(current_batch, verbose=0)[0]
         forecast.append(current_pred)
         current_batch = np.append(current_batch[:, 1:, :], [[current_pred]], axis=1)
 
     forecast_prices = scaler.inverse_transform(forecast)
-
     last_historical_date = df_historical.index[-1]
-    future_dates = pd.to_datetime([last_historical_date + pd.Timedelta(weeks=i) for i in range(1, input.weeks_to_forecast + 1)])
+    future_dates = pd.to_datetime(
+        [last_historical_date + pd.Timedelta(weeks=i) for i in range(1, input.weeks_to_forecast + 1)]
+    )
+
     df_forecast = pd.DataFrame(forecast_prices, index=future_dates, columns=df_historical.columns)
 
     return {"forecast": df_forecast[[input.crop_name]].round(2).to_dict()}
 
-# Load the disease detection model and classes
+
+# Reload models at bottom (ensure availability)
 DISEASE_DETECTION_MODEL = tf.keras.models.load_model("Trained_models/CNN/Disease_Detection_model[CNN].h5")
 DISEASE_CLASSES = np.load("Trained_models/CNN/disease_classes.npy", allow_pickle=True)

@@ -3,6 +3,11 @@
 ## Project Overview
 CROPIX is an intelligent agricultural platform designed to empower farmers with data-driven insights for optimized crop management. This project leverages machine learning models to provide recommendations for crop selection, fertilizer application, and soil analysis, ultimately aiming to enhance yield, reduce waste, and promote sustainable farming practices.
 
+## Created By
+CROPIX was created by 2nd-year students of VIT Bhopal, India:
+- **Rachit Tiwari**: ML Model Engineer (Backend Developer, developed LSTM and CNN models) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rachit-tiwari-3319ba312/)
+- **Shaikh Mohammad Warsi**: UI/UX Designer (Frontend Developer, designed UI/UX and developed KNN model) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/shaikh-mohammad-warsi-141532271/)
+
 ## Features
 - **Crop Recommendation**: Suggests suitable crops based on soil conditions and environmental factors.
 - **Fertilizer Recommendation**: Recommends optimal fertilizer types and quantities for specific crops and soil.
@@ -157,5 +162,4 @@ Production_CROPIX/
 We welcome contributions to CROPIX! Please refer to our [Contributing Guidelines](CONTRIBUTING.md) for more details on how to get involved.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
+This project is licensed under the MIT License.

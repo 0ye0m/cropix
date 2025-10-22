@@ -1,7 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { Navigation } from "@/components/navigation"
+import { Navigation } from "@/components/navigation";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { motion } from "framer-motion"
 import { Cloud, Thermometer, Droplets, MapPin } from "lucide-react"
 
@@ -114,6 +124,34 @@ export default function WeatherForecastPage() {
 
         {weatherData && weatherData.forecast && weatherData.forecast.length > 0 && (
           <div className="grid grid-cols-1 gap-8">
+            <motion.div
+              className="bg-white rounded-2xl shadow-lg border-2 border-green-200 p-6 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Temperature Forecast</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={weatherData.forecast}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={['dataMin - 1', 'dataMax + 1']} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="min_temp_c" stroke="#8884d8" name="Min Temp (°C)" />
+                  <Line type="monotone" dataKey="max_temp_c" stroke="#82ca9d" name="Max Temp (°C)" />
+                  <Line type="monotone" dataKey="avg_temp_c" stroke="#ffc658" name="Avg Temp (°C)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
             {/* Current Weather Card */}
             <motion.div
               className="bg-white rounded-2xl shadow-lg border-2 border-green-200 p-6"

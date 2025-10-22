@@ -1,5 +1,7 @@
 # API Documentation
 
+**Base URL:** `https://yamxxx1-backendcropix.hf.space`
+
 This document provides an overview of the API endpoints available in the CROPIX backend.
 
 ## Endpoints
@@ -121,4 +123,4 @@ This document provides an overview of the API endpoints available in the CROPIX 
 
 ## Authentication
 
-Currently, no authentication is required for these endpoints. For production deployment, consider implementing API key or token-based authentication.
+Currently, no authentication is required for these endpoints.
