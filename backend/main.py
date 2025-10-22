@@ -133,7 +133,11 @@ async def weather_forecast_lstm(input: LSTMWeatherForecastInput):
     if not WEATHER_API_KEY:
         return {"error": "Weather API key not found."}
 
-    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={input.city}&days={input.days}"
+    # The free tier of WeatherAPI limits the forecast to a maximum of 3 days.
+    # If a longer forecast is needed, a different API or a paid plan would be required.
+    days_to_request = min(input.days, 3)
+    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={input.city}&days={days_to_request}"}]}
+```
     response = requests.get(url)
     response.raise_for_status()
     data = response.json()['forecast']['forecastday']
