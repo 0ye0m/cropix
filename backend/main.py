@@ -17,6 +17,7 @@ from PIL import Image
 import io
 import base64
 import uuid
+import datetime # Add this line
 
 app = FastAPI()
 
@@ -42,7 +43,8 @@ FERTILIZER_RECOMMENDATION_MODEL = joblib.load('Trained_models/fertilizer_recomme
 
 # Load LSTM Weather Forecast Model and preprocessing tools
 load_dotenv()
-WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+# OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 MARKET_MODEL_PATH = 'Trained_models/lstm_model.keras'
 MARKET_DATA_PATH = 'Datasets/central_india_weekly_crop_prices.csv'
 
@@ -131,31 +133,43 @@ class LSTMWeatherForecastInput(BaseModel):
 @app.post("/weather_forecast_lstm/")
 async def weather_forecast_lstm(input: LSTMWeatherForecastInput):
     if not WEATHER_API_KEY:
-        return {"error": "Weather API key not found."}
+        return {"error": "OpenWeather API key not found."}
 
-    # The free tier of WeatherAPI limits the forecast to a maximum of 3 days.
-    # If a longer forecast is needed, a different API or a paid plan would be required.
-    days_to_request = min(input.days, 3)
-    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={input.city}&days={days_to_request}"}]}
-```
+    # Geocoding: Convert city name to latitude and longitude using OpenWeatherMap Geocoding API
+    geocode_url = f"http://api.openweathermap.org/geo/1.0/direct?q={input.city}&limit=1&appid={WEATHER_API_KEY}"
+    geocode_response = requests.get(geocode_url)
+    geocode_response.raise_for_status()
+    geocode_data = geocode_response.json()
+
+    if not geocode_data:
+        return {"error": f"Could not find coordinates for city: {input.city}"}
+
+    lat = geocode_data[0]["lat"]
+    lon = geocode_data[0]["lon"]
+
+    # OpenWeatherMap One Call API 3.0 for 8-day daily forecast
+    # The free tier of OpenWeatherMap One Call API 3.0 provides an 8-day daily forecast.
+    # It also has a free limit of 1,000 calls/day.
+    days_to_request = min(input.days, 8) # Cap days at 8 for OpenWeatherMap free tier
+    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&units=metric&appid={WEATHER_API_KEY}"
+
     response = requests.get(url)
     response.raise_for_status()
-    data = response.json()['forecast']['forecastday']
+    data = response.json()["daily"]
 
     forecast_summary = []
-    for day_data in data:
-        date = day_data['date']
-        day_info = day_data['day']
+    for day_data in data[:days_to_request]: # Limit to days_to_request
+        date = datetime.fromtimestamp(day_data["dt"]).strftime("%Y-%m-%d")
         forecast_summary.append({
             "date": date,
-            "min_temp_c": day_info['mintemp_c'],
-            "max_temp_c": day_info['maxtemp_c'],
-            "avg_temp_c": day_info['avgtemp_c'],
-            "avg_humidity": day_info['avghumidity'],
-            "chance_of_rain": day_info['daily_chance_of_rain'],
-            "condition": day_info['condition']['text']
+            "min_temp_c": day_data["temp"]["min"],
+            "max_temp_c": day_data["temp"]["max"],
+            "avg_temp_c": (day_data["temp"]["day"] + day_data["temp"]["night"]) / 2, # Approximate average
+            "avg_humidity": day_data["humidity"],
+            "chance_of_rain": day_data["pop"] * 100, # Probability of precipitation
+            "condition": day_data["weather"][0]["description"]
         })
-    return {"forecast": forecast_summary}
+    return {"forecast": forecast_summary, "city_name": input.city}
 
 
 class WeatherForecastInput(BaseModel):
@@ -166,27 +180,43 @@ class WeatherForecastInput(BaseModel):
 @app.post("/weather_forecast/")
 async def weather_forecast(input: WeatherForecastInput):
     if not WEATHER_API_KEY:
-        return {"error": "Weather API key not found."}
+        return {"error": "OpenWeather API key not found."}
 
-    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={input.city}&days={input.days}"
+    # Geocoding: Convert city name to latitude and longitude using OpenWeatherMap Geocoding API
+    geocode_url = f"http://api.openweathermap.org/geo/1.0/direct?q={input.city}&limit=1&appid={WEATHER_API_KEY}"
+    geocode_response = requests.get(geocode_url)
+    geocode_response.raise_for_status()
+    geocode_data = geocode_response.json()
+
+    if not geocode_data:
+        return {"error": f"Could not find coordinates for city: {input.city}"}
+
+    lat = geocode_data[0]["lat"]
+    lon = geocode_data[0]["lon"]
+
+    # OpenWeatherMap One Call API 3.0 for 8-day daily forecast
+    # The free tier of OpenWeatherMap One Call API 3.0 provides an 8-day daily forecast.
+    # It also has a free limit of 1,000 calls/day.
+    days_to_request = min(input.days, 8) # Cap days at 8 for OpenWeatherMap free tier
+    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&units=metric&appid={WEATHER_API_KEY}"
+
     response = requests.get(url)
     response.raise_for_status()
-    data = response.json()['forecast']['forecastday']
+    data = response.json()["daily"]
 
     forecast_summary = []
-    for day_data in data:
-        date = day_data['date']
-        day_info = day_data['day']
+    for day_data in data[:days_to_request]: # Limit to days_to_request
+        date = datetime.fromtimestamp(day_data["dt"]).strftime("%Y-%m-%d")
         forecast_summary.append({
             "date": date,
-            "min_temp_c": day_info['mintemp_c'],
-            "max_temp_c": day_info['maxtemp_c'],
-            "avg_temp_c": day_info['avgtemp_c'],
-            "avg_humidity": day_info['avghumidity'],
-            "chance_of_rain": day_info['daily_chance_of_rain'],
-            "condition": day_info['condition']['text']
+            "min_temp_c": day_data["temp"]["min"],
+            "max_temp_c": day_data["temp"]["max"],
+            "avg_temp_c": (day_data["temp"]["day"] + day_data["temp"]["night"]) / 2, # Approximate average
+            "avg_humidity": day_data["humidity"],
+            "chance_of_rain": day_data["pop"] * 100, # Probability of precipitation
+            "condition": day_data["weather"][0]["description"]
         })
-    return {"forecast": forecast_summary}
+    return {"forecast": forecast_summary, "city_name": input.city}
 
 
 class FertilizerRecommendationInput(BaseModel):
