@@ -18,6 +18,7 @@ import io
 import base64
 import uuid
 import datetime # Add this line
+from collections import defaultdict
 
 app = FastAPI()
 
@@ -147,27 +148,38 @@ async def weather_forecast_lstm(input: LSTMWeatherForecastInput):
     lat = geocode_data[0]["lat"]
     lon = geocode_data[0]["lon"]
 
-    # OpenWeatherMap One Call API 3.0 for 8-day daily forecast
-    # The free tier of OpenWeatherMap One Call API 3.0 provides an 8-day daily forecast.
-    # It also has a free limit of 1,000 calls/day.
-    days_to_request = min(input.days, 8) # Cap days at 8 for OpenWeatherMap free tier
-    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&units=metric&appid={WEATHER_API_KEY}"
+    # OpenWeatherMap 5-day / 3-hour forecast (free tier)
+    # The free tier of OpenWeatherMap provides a 5-day / 3-hour forecast.
+    # It has a free limit of 1,000,000 calls/month.
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API_KEY}"
 
     response = requests.get(url)
     response.raise_for_status()
-    data = response.json()["daily"]
+    data = response.json()["list"]
+
+    daily_forecasts = defaultdict(lambda: {"min_temp": float('inf'), "max_temp": float('-inf'), "humidity_sum": 0, "pop_sum": 0, "count": 0, "condition": ""})
+
+    for item in data:
+        date = datetime.datetime.fromtimestamp(item["dt"]).strftime("%Y-%m-%d")
+        daily_forecasts[date]["min_temp"] = min(daily_forecasts[date]["min_temp"], item["main"]["temp_min"])
+        daily_forecasts[date]["max_temp"] = max(daily_forecasts[date]["max_temp"], item["main"]["temp_max"])
+        daily_forecasts[date]["humidity_sum"] += item["main"]["humidity"]
+        daily_forecasts[date]["pop_sum"] += item.get("pop", 0) # Probability of precipitation
+        daily_forecasts[date]["count"] += 1
+        # Take the condition from the first entry of the day, or most frequent
+        if not daily_forecasts[date]["condition"]:
+            daily_forecasts[date]["condition"] = item["weather"][0]["description"]
 
     forecast_summary = []
-    for day_data in data[:days_to_request]: # Limit to days_to_request
-        date = datetime.fromtimestamp(day_data["dt"]).strftime("%Y-%m-%d")
+    for date, values in sorted(daily_forecasts.items())[:input.days]: # Limit to requested days
         forecast_summary.append({
             "date": date,
-            "min_temp_c": day_data["temp"]["min"],
-            "max_temp_c": day_data["temp"]["max"],
-            "avg_temp_c": (day_data["temp"]["day"] + day_data["temp"]["night"]) / 2, # Approximate average
-            "avg_humidity": day_data["humidity"],
-            "chance_of_rain": day_data["pop"] * 100, # Probability of precipitation
-            "condition": day_data["weather"][0]["description"]
+            "min_temp_c": round(values["min_temp"], 2),
+            "max_temp_c": round(values["max_temp"], 2),
+            "avg_temp_c": round((values["min_temp"] + values["max_temp"]) / 2, 2), # Approximate average
+            "avg_humidity": round(values["humidity_sum"] / values["count"], 2),
+            "chance_of_rain": round(values["pop_sum"] / values["count"] * 100, 2),
+            "condition": values["condition"]
         })
     return {"forecast": forecast_summary, "city_name": input.city}
 
@@ -194,27 +206,38 @@ async def weather_forecast(input: WeatherForecastInput):
     lat = geocode_data[0]["lat"]
     lon = geocode_data[0]["lon"]
 
-    # OpenWeatherMap One Call API 3.0 for 8-day daily forecast
-    # The free tier of OpenWeatherMap One Call API 3.0 provides an 8-day daily forecast.
-    # It also has a free limit of 1,000 calls/day.
-    days_to_request = min(input.days, 8) # Cap days at 8 for OpenWeatherMap free tier
-    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&units=metric&appid={WEATHER_API_KEY}"
+    # OpenWeatherMap 5-day / 3-hour forecast (free tier)
+    # The free tier of OpenWeatherMap provides a 5-day / 3-hour forecast.
+    # It has a free limit of 1,000,000 calls/month.
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API_KEY}"
 
     response = requests.get(url)
     response.raise_for_status()
-    data = response.json()["daily"]
+    data = response.json()["list"]
+
+    daily_forecasts = defaultdict(lambda: {"min_temp": float('inf'), "max_temp": float('-inf'), "humidity_sum": 0, "pop_sum": 0, "count": 0, "condition": ""})
+
+    for item in data:
+        date = datetime.datetime.fromtimestamp(item["dt"]).strftime("%Y-%m-%d")
+        daily_forecasts[date]["min_temp"] = min(daily_forecasts[date]["min_temp"], item["main"]["temp_min"])
+        daily_forecasts[date]["max_temp"] = max(daily_forecasts[date]["max_temp"], item["main"]["temp_max"])
+        daily_forecasts[date]["humidity_sum"] += item["main"]["humidity"]
+        daily_forecasts[date]["pop_sum"] += item.get("pop", 0) # Probability of precipitation
+        daily_forecasts[date]["count"] += 1
+        # Take the condition from the first entry of the day, or most frequent
+        if not daily_forecasts[date]["condition"]:
+            daily_forecasts[date]["condition"] = item["weather"][0]["description"]
 
     forecast_summary = []
-    for day_data in data[:days_to_request]: # Limit to days_to_request
-        date = datetime.fromtimestamp(day_data["dt"]).strftime("%Y-%m-%d")
+    for date, values in sorted(daily_forecasts.items())[:input.days]: # Limit to requested days
         forecast_summary.append({
             "date": date,
-            "min_temp_c": day_data["temp"]["min"],
-            "max_temp_c": day_data["temp"]["max"],
-            "avg_temp_c": (day_data["temp"]["day"] + day_data["temp"]["night"]) / 2, # Approximate average
-            "avg_humidity": day_data["humidity"],
-            "chance_of_rain": day_data["pop"] * 100, # Probability of precipitation
-            "condition": day_data["weather"][0]["description"]
+            "min_temp_c": round(values["min_temp"], 2),
+            "max_temp_c": round(values["max_temp"], 2),
+            "avg_temp_c": round((values["min_temp"] + values["max_temp"]) / 2, 2), # Approximate average
+            "avg_humidity": round(values["humidity_sum"] / values["count"], 2),
+            "chance_of_rain": round(values["pop_sum"] / values["count"] * 100, 2),
+            "condition": values["condition"]
         })
     return {"forecast": forecast_summary, "city_name": input.city}
 
