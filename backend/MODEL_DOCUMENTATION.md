@@ -33,7 +33,7 @@ This document provides details about the machine learning models used in the CRO
 - **Purpose:** Recommends the optimal fertilizer type based on soil and crop conditions.
 - **Type:** Classification Model
 - **Training Methodology:** (To be filled: Describe the model used, input features (e.g., N, P, K, crop type, soil type), and training process.)
-- **Dataset:** (To be filled: Describe the dataset used for training, including soil and crop data with corresponding fertilizer recommendations.)
+- **Dataset:** Webscrapped and synthetically generated
 - **Performance Metrics:** ![R2, MSE, MAE](/backend/METRICS/Fertilizer_Recom_Random_Forest/R2_score--MSE--MAE.png), ![Feature Importance](/backend/METRICS/Fertilizer_Recom_Random_Forest/feature_importance.png), ![Predicted vs Actual](/backend/METRICS/Fertilizer_Recom_Random_Forest/predicted_vs_actual.png), ![Predicted vs Actual Required K](/backend/METRICS/Fertilizer_Recom_Random_Forest/predicted_vs_actual_Required_K.png), ![Predicted vs Actual Required N](/backend/METRICS/Fertilizer_Recom_Random_Forest/predicted_vs_actual_Required_N.png), ![Predicted vs Actual Required P](/backend/METRICS/Fertilizer_Recom_Random_Forest/predicted_vs_actual_Required_P.png)
 
 ## 5. Market Price Forecast Model
