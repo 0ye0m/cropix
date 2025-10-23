@@ -34,7 +34,7 @@ This document provides details about the machine learning models used in the CRO
 - **Type:** Classification Model
 - **Training Methodology:** (To be filled: Describe the model used, input features (e.g., N, P, K, crop type, soil type), and training process.)
 - **Dataset:** (To be filled: Describe the dataset used for training, including soil and crop data with corresponding fertilizer recommendations.)
-- **Performance Metrics:** ![R2, MSE, MAE](METRICS/Fertilizer_Recom[Random Forest]/R2_score--MSE--MAE.png), ![Feature Importance](METRICS/Fertilizer_Recom[Random Forest]/feature_importance.png), ![Predicted vs Actual](METRICS/Fertilizer_Recom[Random Forest]/predicted_vs_actual.png), ![Predicted vs Actual Required K](METRICS/Fertilizer_Recom[Random Forest]/predicted_vs_actual_Required_K.png), ![Predicted vs Actual Required N](METRICS/Fertilizer_Recom[Random Forest]/predicted_vs_actual_Required_N.png), ![Predicted vs Actual Required P](METRICS/Fertilizer_Recom[Random Forest]/predicted_vs_actual_Required_P.png)
+- **Performance Metrics:** ![R2, MSE, MAE](METRICS/Fertilizer_Recom\[Random Forest\]/R2_score--MSE--MAE.png), ![Feature Importance](METRICS/Fertilizer_Recom\[Random Forest\]/feature_importance.png), ![Predicted vs Actual](METRICS/Fertilizer_Recom\[Random Forest\]/predicted_vs_actual.png), ![Predicted vs Actual Required K](METRICS/Fertilizer_Recom\[Random Forest\]/predicted_vs_actual_Required_K.png), ![Predicted vs Actual Required N](METRICS/Fertilizer_Recom\[Random Forest\]/predicted_vs_actual_Required_N.png), ![Predicted vs Actual Required P](METRICS/Fertilizer_Recom\[Random Forest\]/predicted_vs_actual_Required_P.png)
 
 ## 5. Market Price Forecast Model
 - **File:** `lstm_model.keras`
