@@ -41,9 +41,11 @@ The backend of CROPIX is a Python-based API that serves machine learning models 
     - **Matplotlib & Seaborn**: For data visualization and analysis (likely used during model development).
     - **Joblib**: For efficient saving and loading of Python objects, especially large NumPy arrays, used for trained machine learning models.
 
+To Get details about ML models refer to this: [Model Documentation](backend/MODEL_DOCUMENTATION.md)
+
 ## How to Use CROPIX
 
-Visit our website at [https://cropixbitlyfe.com](https://cropixbitlyfe.vercel.app) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
+Visit our website at [https://cropixbitlyfe.vercel.app](https://cropixbitlyfe.vercel.app) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
 
 ### 1. Crop Recommendation
 - **How to Use**: Navigate to the 'Crop Recommendation' section. Input your soil's nitrogen, phosphorus, and potassium levels, pH, rainfall, temperature, and humidity. The system will then suggest the best crops for your environment.
