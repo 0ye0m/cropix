@@ -7,12 +7,13 @@ This document provides details about the machine learning models used in the CRO
 - **Purpose:** Detects plant diseases from images.
 - **Type:** Convolutional Neural Network (CNN)
 - **Training Methodology:** (To be filled: Describe the CNN architecture, layers, activation functions, optimizer, loss function, and training epochs.)
-- **Dataset:** (To be filled: Describe the dataset used for training, including size, sources, and preprocessing steps.)
+- **Dataset:** [PlantVillage Dataset (Kaggle)](https://www.kaggle.com/datasets/emmarex/plantdisease), [Rice Leaf Diseases Dataset (Kaggle)](https://www.kaggle.com/datasets/vbookshelf/rice-leaf-diseases), [Wheat Disease Detection (Kaggle)](https://www.kaggle.com/datasets/sinadunk23/behzad-safari-jalal)
 - **Performance Metrics:** (To be filled: Provide metrics such as accuracy, precision, recall, F1-score, and validation loss.)
 
 ## 2. Crop Yield Model
 - **File:** `CROP_YIELD_MODEL.joblib`
 - **Purpose:** Predicts crop yield based on various input features.
+- **Dataset Source:** [Crop Yield in Indian States Dataset (Kaggle)](https://www.kaggle.com/datasets/akshatgupta7/crop-yield-in-indian-states-dataset)
 - **Type:** (To be filled: e.g., Regression Model, Random Forest, Gradient Boosting)
 - **Training Methodology:** (To be filled: Describe the model used, feature engineering, and training process.)
 - **Dataset:** (To be filled: Describe the dataset used for training, including features like soil type, weather, and historical yield data.)
@@ -21,6 +22,7 @@ This document provides details about the machine learning models used in the CRO
 ## 3. Soil-Crop Recommendation Model
 - **File:** `Soil_crop_recom.joblib`
 - **Purpose:** Recommends suitable crops based on soil characteristics.
+- **Dataset Source:** [Crop Recommendation Dataset (Kaggle)](https://www.kaggle.com/datasets/atharvaingle/crop-recommendation-dataset)
 - **Type:** (To be filled: e.g., Classification Model, Decision Tree, Support Vector Machine)
 - **Training Methodology:** (To be filled: Describe the model used, input features (e.g., N, P, K, pH), and training process.)
 - **Dataset:** (To be filled: Describe the dataset used for training, including soil nutrient data and corresponding suitable crops.)
@@ -37,6 +39,8 @@ This document provides details about the machine learning models used in the CRO
 ## 5. Market Price Forecast Model
 - **File:** `lstm_model.keras`
 - **Purpose:** Forecasts future market prices for agricultural products.
+- **Dataset Source:** [Agmarknet.gov.in](https://agmarknet.gov.in/PriceAndArrivals/CommodityDailyStateWise.aspx)
+- **Market Prices Data:** [Agmarknet.gov.in](https://agmarknet.gov.in)
 - **Type:** Long Short-Term Memory (LSTM) Neural Network
 - **Training Methodology:** (To be filled: Describe the LSTM architecture, time-series data preprocessing, sequence length, and training parameters.)
 - **Dataset:** (To be filled: Describe the time-series dataset used for training, including historical price data.)
