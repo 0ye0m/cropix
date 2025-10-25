@@ -176,8 +176,8 @@ export default function HomePage() {
               {[
                 {
                   icon: Sprout,
-                  title: "Crop Recommendation",
-                  description: "AI-powered suggestions for the best crops based on your soil and climate conditions.",
+                  title: "Crop Yield Prediction",
+                  description: "Predict crop yields based on various factors to optimize planning and resource allocation.",
                   color: "from-green-400/20 to-primary/20",
                   delay: 0,
                   href: "/crop-recommendation",
@@ -208,7 +208,7 @@ export default function HomePage() {
                 },
                 {
                   icon: Leaf,
-                  title: "Soil Crop Recommendation",
+                  title: "Soil Based Crop Recommendation",
                   description: "Get recommendations for crops based on your soil conditions.",
                   color: "from-yellow-400/20 to-primary/20",
                   delay: 0.4,
