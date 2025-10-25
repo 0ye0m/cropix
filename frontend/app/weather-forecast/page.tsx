@@ -17,17 +17,25 @@ import { Cloud, Thermometer, Droplets, MapPin } from "lucide-react"
 
 export default function WeatherForecastPage() {
   const [location, setLocation] = useState("")
-  const [days, setDays] = useState(7) // Default to 7 days
+  const [days, setDays] = useState(6) // Default to 6 days
   const [weatherData, setWeatherData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [warning, setWarning] = useState(null) // New state for warning message
 
   const handleChange = (e) => {
     setLocation(e.target.value)
   }
 
   const handleDaysChange = (e) => {
-    setDays(e.target.value)
+    const newDays = parseInt(e.target.value)
+    if (newDays > 6) {
+      setDays(6) // Cap at 6 days
+      setWarning("Only a 6-day forecast is available. Displaying 6 days.")
+    } else {
+      setDays(newDays)
+      setWarning(null)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -35,6 +43,12 @@ export default function WeatherForecastPage() {
     setLoading(true)
     setError(null)
     setWeatherData(null)
+    setWarning(null) // Clear any previous warnings
+
+    const daysToSend = days > 6 ? 6 : days; // Ensure we send max 6 days to backend
+    if (days > 6) {
+      setWarning("Only a 6-day forecast is available. Displaying 6 days.")
+    }
 
     try {
       const response = await fetch("https://yamxxx1-BackendCropix.hf.space/weather_forecast/", {
@@ -42,7 +56,7 @@ export default function WeatherForecastPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ city: location, days: parseInt(days) }),
+        body: JSON.stringify({ city: location, days: daysToSend }),
       })
 
       if (!response.ok) {
@@ -103,7 +117,7 @@ export default function WeatherForecastPage() {
               value={days}
               onChange={handleDaysChange}
               min="1"
-              max="14"
+              max="6" // Changed max to 6
               required
             />
           </div>
@@ -120,6 +134,7 @@ export default function WeatherForecastPage() {
 
         {loading && <p className="text-blue-500">Loading...</p>}
         {error && <p className="text-red-500">Error: {error}</p>}
+        {warning && <p className="text-yellow-500">Warning: {warning}</p>} {/* Display warning message */}
 
 
         {weatherData && weatherData.forecast && weatherData.forecast.length > 0 && (
@@ -212,7 +227,7 @@ export default function WeatherForecastPage() {
             >
               <div className="flex items-center mb-6">
                 <Cloud className="w-8 h-8 text-green-600 mr-3" />
-                <h2 className="text-2xl font-bold text-gray-900">7-Day Weather Forecast for {weatherData.city_name}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{weatherData.forecast.length}-Day Weather Forecast for {weatherData.city_name}</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
