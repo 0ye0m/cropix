@@ -24,8 +24,8 @@ export function Navigation() {
   ]
 
   const recommendationItems = [
-    { href: "/crop-recommendation", label: "Crop Recommendation" },
-    { href: "/soil-crop-recommendation", label: "Soil Crop Recommendation" },
+    { href: "/crop-recommendation", label: "Crop Yield Prediction" },
+    { href: "/soil-crop-recommendation", label: "Soil Based Crop Recommendation" },
     { href: "/fertilizer-recommendation", label: "Fertilizer Recommendation" },
   ]
 
