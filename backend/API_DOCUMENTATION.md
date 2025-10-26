@@ -121,7 +121,6 @@ This document provides an overview of the API endpoints available in the CROPIX 
   }
   ```
 
-## Authentication
 
 ## Authentication
 
