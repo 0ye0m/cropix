@@ -166,7 +166,7 @@ export default function FormPage() {
                 {/* Fertilizer */}
                 <div className="space-y-2">
                   <Label htmlFor="Fertilizer" className="text-sm font-medium text-gray-700">
-                    Fertilizer (tonnes)
+                    Fertilizer (kg)
                   </Label>
                   <Input
                     id="Fertilizer"
