@@ -208,7 +208,7 @@ export default function HomePage() {
                 },
                 {
                   icon: Leaf,
-                  title: "Soil Based Crop Recommendation",
+                  title: "Soil Crop Recommendation",
                   description: "Get recommendations for crops based on your soil conditions.",
                   color: "from-yellow-400/20 to-primary/20",
                   delay: 0.4,
