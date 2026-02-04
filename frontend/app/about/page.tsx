@@ -16,8 +16,8 @@ const teamMembers = [
     role: "ML model engineer",
     bio: "Worked as backend dev and made :- lstm and cnn models",
     social: {
-      github: "https://github.com/rachittiwari",
-      linkedin: "https://www.linkedin.com/in/rachittiwari",
+      github: "https://github.com/bit-blitz",
+      linkedin: "https://www.linkedin.com/in/rachit-tiwari-3319ba312/",
       instagram: "https://www.instagram.com/rachittiwari",
     },
   },
@@ -27,7 +27,7 @@ const teamMembers = [
     bio: "Worked as frontend dev and made:- ui/ux and knn model",
     social: {
       github: "https://github.com/shaikhwarsi",
-      linkedin: "https://www.linkedin.com/in/shaikhwarsi",
+      linkedin: "https://www.linkedin.com/in/shaikh-mohammad-warsi-141532271",
       instagram: "https://www.instagram.com/shaikhwarsi",
     },
   },
