@@ -3,10 +3,7 @@
 ## Project Overview
 CROPIX is an intelligent agricultural platform designed to empower farmers with data-driven insights for optimized crop management. This project leverages machine learning models to provide recommendations for crop selection, fertilizer application, and soil analysis, ultimately aiming to enhance yield, reduce waste, and promote sustainable farming practices.
 
-## Created By
-CROPIX was created by 2nd-year students of VIT Bhopal, India:
-- **Rachit Tiwari**: ML Model Engineer (Backend Developer, developed LSTM and CNN models) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rachit-tiwari-3319ba312/)
-- **Shaikh Mohammad Warsi**: UI/UX Designer (Frontend Developer, designed UI/UX and developed KNN model) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/shaikh-mohammad-warsi-141532271/)
+
 
 ## Features
 - **Crop Recommendation**: Suggests suitable crops based on soil conditions and environmental factors.
@@ -45,7 +42,6 @@ To Get details about ML models refer to this: [Model Documentation](backend/MODE
 
 ## How to Use CROPIX
 
-Visit our website at [https://cropixbitlyfe.vercel.app](https://cropixbitlyfe.vercel.app) to access and utilize all the functions of CROPIX. CROPIX provides several powerful tools to assist farmers. Here's a quick guide on how to use each main feature:
 
 ### 1. Crop Recommendation
 - **How to Use**: Navigate to the 'Crop Recommendation' section. Input your soil's nitrogen, phosphorus, and potassium levels, pH, rainfall, temperature, and humidity. The system will then suggest the best crops for your environment.
@@ -78,8 +74,7 @@ Before you begin, ensure you have the following installed:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/ShaikhWarsi/CropixFarming
-cd Production---CROPIX
+git clone https://github.com/0ye0m/cropix
 ```
 
 ### 2. Backend Setup
@@ -155,13 +150,3 @@ Production_CROPIX/
 └── README.md               # This file
 ```
 
-## Documentation
-- [API Documentation](backend/API_DOCUMENTATION.md): Detailed information about the backend API endpoints.
-- [Model Documentation](backend/MODEL_DOCUMENTATION.md): In-depth documentation for each machine learning model used in the project.
-- [Contributing Guidelines](CONTRIBUTING.md): Information on how to contribute to the project.
-
-## Contributing
-We welcome contributions to CROPIX! Please refer to our [Contributing Guidelines](CONTRIBUTING.md) for more details on how to get involved.
-
-## License
-This project is licensed under the MIT License.
