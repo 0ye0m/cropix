@@ -369,46 +369,9 @@ export default function HomePage() {
               </p>
             </MotionDiv>
 
+            </div>
+
             
-
-            <MotionDiv
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.8, type: "spring", stiffness: 100 }}
-            >
-              <h4 className="text-lg font-bold text-foreground mb-6">Contact Us</h4>
-              <Link href="/contact">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden border-2 border-primary text-primary hover:bg-primary hover:text-white"
-                >
-                  <span className="relative z-10 flex items-center gap-2">
-                    Get in Touch
-                  </span>
-                </Button>
-              </Link>
-            </MotionDiv>
-
-            <MotionDiv
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.9, type: "spring", stiffness: 100 }}
-            >
-              <h4 className="text-lg font-bold text-foreground mb-6">About Us</h4>
-              <Link href="/about">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden border-2 border-primary text-primary hover:bg-primary hover:text-white"
-                >
-                  <span className="relative z-10 flex items-center gap-2">
-                    Learn More
-                  </span>
-                </Button>
-              </Link>
-            </MotionDiv>
-          </div>
 
           <MotionDiv
             className="mt-12 pt-8 border-t border-border/50 text-center"
@@ -417,7 +380,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 2 }}
           >
             <p className="text-center text-sm text-gray-500">
-              &copy; 2025 Cropix. All rights reserved. Made with 🌱 for farmers worldwide.
+              &copy; 2026 Cropix. All rights reserved. Made with 🌱 for farmers worldwide.
             </p>
           </MotionDiv>
         </div>
