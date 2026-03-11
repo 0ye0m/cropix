@@ -1,165 +1,319 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { Upload, CheckCircle } from "lucide-react"
+import { Upload, CheckCircle, AlertTriangle, Loader2, Leaf, Sparkles } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+// --- API CONFIGURATION ---
+const GROQ_API_KEYS = [
+  "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",
+  "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"
+]
+const MODEL_ID = "llama-3.1-8b-instant"
+
+interface DiagnosisResult {
+  disease: string;
+  confidence: number;
+}
+
+// Allow ANY structure from AI to prevent crashes
+interface AIAnalysis {
+  verification: string; 
+  diagnosis: string;
+  treatment: any; 
+  prevention: any;
+}
+
+const extractJson = (text: string): string => {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  return jsonMatch ? jsonMatch[0] : text;
+};
 
 export default function DiseaseDetectionPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [result, setResult] = useState<{ disease: string; action: string } | null>(null)
+  const [statusMessage, setStatusMessage] = useState("")
+  const [backendResult, setBackendResult] = useState<DiagnosisResult | null>(null)
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setUploadedImage(reader.result as string)
-        analyzeImage(reader.result as string)
+        const base64 = reader.result as string
+        setUploadedImage(base64)
+        runHybridAnalysis(base64)
       }
       reader.readAsDataURL(file)
     }
   }
 
-  const analyzeImage = async (imageData: string) => {
+  const runHybridAnalysis = async (imageData: string) => {
     setIsAnalyzing(true)
-    setResult(null)
+    setError(null)
+    setBackendResult(null)
+    setAiAnalysis(null)
 
     try {
-      const base64Image = imageData.split(",")[1]; // Extract base64 part
-      const response = await fetch("https://yamxxx1-BackendCropix.hf.space/detect_disease/", {
+      setStatusMessage("🔬 Scanning leaf patterns...")
+      const base64Image = imageData.split(",")[1]
+      
+      const backendResponse = await fetch("https://yamxxx1-BackendCropix.hf.space/detect_disease/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image_base64: base64Image }),
-      });
+      })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!backendResponse.ok) throw new Error("Backend failed")
+      const backendData = await backendResponse.json()
+      if (backendData.error) throw new Error(backendData.error)
 
-      const data = await response.json();
-      if (data.error) {
-        setResult({ disease: "Error", action: data.error });
-      } else {
-        setResult({
-          disease: data.predicted_disease,
-          action: `Confidence: ${(data.confidence * 100).toFixed(2)}%`,
-        });
+      const cnnPrediction: DiagnosisResult = {
+        disease: backendData.predicted_disease,
+        confidence: backendData.confidence
       }
-    } catch (error) {
-      console.error("Error detecting disease:", error);
-      setResult({ disease: "Error", action: "Failed to connect to the server or process image." });
+      setBackendResult(cnnPrediction)
+
+      setStatusMessage("🧠 AI generating plan...")
+      await getAIAnalysis(cnnPrediction)
+
+    } catch (err) {
+      setError((err as Error).message)
     } finally {
-      setIsAnalyzing(false);
+      setIsAnalyzing(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
-      <Navigation />
+  const getAIAnalysis = async (cnnResult: DiagnosisResult) => {
+    const prompt = `
+      You are an agricultural expert. Generate a treatment plan for "${cnnResult.disease}".
+      Return STRICT JSON format:
+      {
+        "verification": "Confirmed",
+        "diagnosis": "${cnnResult.disease}",
+        "treatment": {
+          "chemical": "Specific chemicals",
+          "organic": "Organic options",
+          "instructions": "How to apply"
+        },
+        "prevention": "Tips to prevent recurrence"
+      }
+    `;
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 text-center mb-4 text-balance leading-tight">Detect Crop Diseases</h1>
-          <p className="text-base sm:text-lg text-gray-700 text-center mb-12 max-w-2xl mx-auto">
-            Upload an image of your crop to get instant disease detection and treatment recommendations.
-          </p>
+    for (const key of GROQ_API_KEYS) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: MODEL_ID,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.2,
+          })
+        });
+
+        if (!res.ok) continue;
+
+        const data = await res.json();
+        const content = data.choices[0].message.content;
+        const cleanJson = extractJson(content);
+        const parsed = JSON.parse(cleanJson);
+        setAiAnalysis(parsed);
+        return;
+
+      } catch (err) { console.warn("Retry...", err); }
+    }
+    throw new Error("AI failed to generate plan.");
+  }
+
+  // --- THE FIX: SAFE RENDER HELPER ---
+  // This function recursively renders ANY data type safely (String, Object, Array)
+  const safeRender = (data: any): React.ReactNode => {
+    if (data === null || data === undefined) return null;
+    
+    // 1. If it's a simple string or number, render it directly
+    if (typeof data === 'string' || typeof data === 'number') {
+      return <span>{data}</span>;
+    }
+
+    // 2. If it's an array, map over it safely
+    if (Array.isArray(data)) {
+      return (
+        <ul className="list-disc pl-5 space-y-1">
+          {data.map((item, i) => <li key={i}>{safeRender(item)}</li>)}
+        </ul>
+      );
+    }
+
+    // 3. If it's an object, render keys nicely
+    if (typeof data === 'object') {
+      return (
+        <div className="space-y-2 mt-2">
+          {Object.entries(data).map(([key, value]) => (
+            <div key={key} className="bg-muted/50 p-2 rounded">
+              <span className="font-semibold capitalize text-foreground mr-2">{key.replace(/_/g, ' ')}:</span>
+              <div className="text-muted-foreground ml-2">
+                {safeRender(value)}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return String(data);
+  };
+
+  const resetState = () => {
+    setUploadedImage(null)
+    setBackendResult(null)
+    setAiAnalysis(null)
+    setError(null)
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-5xl mx-auto px-4 py-16">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">AI Disease Detection</h1>
+          <p className="text-lg text-muted-foreground">Hybrid Intelligence Analysis</p>
         </motion.div>
 
-        <motion.div
-          className="bg-white rounded-2xl shadow-lg border-2 border-green-200 p-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          {!uploadedImage ? (
+        {!uploadedImage ? (
+          <motion.div className="bg-card border shadow-lg rounded-2xl p-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="text-center">
-              <motion.div
-                className="border-2 border-dashed border-green-300 rounded-xl p-12 hover:border-green-400 transition-colors cursor-pointer"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
+              <div className="border-2 border-dashed border-primary/30 rounded-xl p-12 hover:border-primary cursor-pointer">
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="image-upload" />
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                  >
-                    <Upload className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  </motion.div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Crop Image</h3>
-                  <p className="text-gray-600">Drag & drop or click to select an image of your crop</p>
+                <label htmlFor="image-upload" className="cursor-pointer block">
+                  <Upload className="w-16 h-16 text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Upload Crop Image</h3>
+                  <p className="text-muted-foreground">Click to select</p>
                 </label>
-              </motion.div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="text-center">
-                <img
-                  src={uploadedImage || "/placeholder.svg"}
-                  alt="Uploaded crop"
-                  className="max-w-md mx-auto rounded-lg shadow-md"
-                />
               </div>
+            </div>
+          </motion.div>
+        ) : (
+          <div className="space-y-8">
+            <motion.div className="bg-card border shadow-lg rounded-2xl p-4 flex justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <img src={uploadedImage} alt="Crop" className="max-h-[400px] rounded-lg object-contain" />
+            </motion.div>
 
-              {isAnalyzing ? (
-                <motion.div className="text-center py-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                    className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-4"
-                  />
-                  <p className="text-lg text-gray-600">Analyzing image...</p>
-                </motion.div>
-              ) : result ? (
-                <motion.div
-                  className="bg-green-50 border border-green-200 rounded-xl p-6"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="flex items-center mb-4">
-                    <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
-                    <h3 className="text-lg font-semibold text-gray-900">Analysis Complete</h3>
+            {isAnalyzing && (
+              <Card className="bg-blue-50 dark:bg-blue-950/30">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                  <div>
+                    <p className="font-semibold text-blue-900 dark:text-blue-100">Analyzing...</p>
+                    <p className="text-sm text-blue-700">{statusMessage}</p>
                   </div>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="font-medium text-gray-900">Detected Disease: </span>
-                      <span className="text-red-600 font-semibold">{result.disease}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-900">Recommended Action: </span>
-                      <span className="text-gray-700">{result.action}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              ) : null}
+                </CardContent>
+              </Card>
+            )}
 
-              <div className="text-center">
-                <Button
-                  onClick={() => {
-                    setUploadedImage(null)
-                    setResult(null)
-                  }}
-                  variant="outline"
-                  className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition-colors"
-                >
-                  Upload Another Image
+            {error && (
+              <div className="bg-destructive/10 text-destructive p-4 rounded-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                <p>Error: {error}</p>
+              </div>
+            )}
+
+            {!isAnalyzing && backendResult && aiAnalysis && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Model Detection */}
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                  <Card className="h-full bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Leaf className="w-5 h-5 text-green-600" /> Model Detection
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Predicted Disease</span>
+                        <p className="text-xl font-bold text-foreground">{backendResult.disease}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Confidence</span>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-1">
+                          <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${backendResult.confidence * 100}%` }}></div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* AI Analysis */}
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+                  <Card className="h-full border-green-400 bg-green-50 dark:bg-green-900/10">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Sparkles className="w-5 h-5 text-green-600" /> Expert Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Status:</span>
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-200 text-green-800">
+                            {aiAnalysis.verification}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium">Diagnosis:</span>
+                          <p className="text-foreground">{aiAnalysis.diagnosis}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Action Plan */}
+                <motion.div className="md:col-span-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                  <Card className="bg-card shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg text-primary">
+                        <CheckCircle className="w-5 h-5" /> Recommended Action Plan
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-2">🧪 Treatment</h4>
+                        {/* USE SAFE RENDER HERE */}
+                        <div className="text-muted-foreground">
+                          {safeRender(aiAnalysis.treatment)}
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 p-4 rounded-lg mt-4">
+                        <h4 className="font-semibold text-foreground mb-1">🛡️ Prevention</h4>
+                        {/* USE SAFE RENDER HERE */}
+                        <div className="text-muted-foreground">
+                          {safeRender(aiAnalysis.prevention)}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+              </div>
+            )}
+
+            {!isAnalyzing && (
+              <div className="text-center mt-8">
+                <Button onClick={resetState} variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+                  Scan Another Image
                 </Button>
               </div>
-            </div>
-          )}
-        </motion.div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )
