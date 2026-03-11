@@ -8,55 +8,111 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navigation } from "@/components/navigation";
 import { motion } from "framer-motion";
 
-export default function SoilCropRecommendationPage() {
-  const [formData, setFormData] = useState({
-    N: "",
-    P: "",
-    K: "",
-    temperature: "",
-    humidity: "",
-    ph: "",
-    rainfall: "",
-  });
-  const [recommendation, setRecommendation] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+// --- TYPES ---
+interface SoilFormData {
+  N: string;
+  P: string;
+  K: string;
+  temperature: string;
+  humidity: string;
+  ph: string;
+  rainfall: string;
+  [key: string]: string;
+}
 
-  const handleChange = (e) => {
+// --- API CONFIGURATION ---
+const GROQ_API_KEYS = [
+  "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", 
+  "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"  
+];
+
+const MODEL_ID = "llama-3.1-8b-instant"; // Updated Model ID
+
+export default function SoilCropRecommendationPage() {
+  const [formData, setFormData] = useState<SoilFormData>({
+    N: "", P: "", K: "", temperature: "", humidity: "", ph: "", rainfall: "",
+  });
+  const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  // --- GROQ API INTEGRATION ---
+  const callGroqAPI = async (prompt: string): Promise<string> => {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < GROQ_API_KEYS.length; i++) {
+      const key = GROQ_API_KEYS[i];
+      console.log(`%c[DEBUG] Attempting Groq API Call with Key #${i + 1}`, 'color: blue; font-weight: bold;');
+
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${key}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: MODEL_ID,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.3, 
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[DEBUG] Key #${i + 1} Failed: Status ${response.status}`, errorText);
+          lastError = new Error(`API Error ${response.status}`);
+          continue; 
+        }
+
+        const data = await response.json();
+        console.log("[DEBUG] API Response Success:", data);
+        return data.choices[0].message.content;
+
+      } catch (err) {
+        if (err instanceof Error) {
+            console.error(`[DEBUG] Network/Fetch Error with Key #${i + 1}:`, err);
+            lastError = err;
+        }
+      }
+    }
+
+    throw lastError || new Error("All API keys failed.");
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setRecommendation(null);
 
+    const prompt = `
+      Act as an expert agronomist. Analyze the following soil and weather conditions:
+      - Nitrogen: ${formData.N}
+      - Phosphorus: ${formData.P}
+      - Potassium: ${formData.K}
+      - Temperature: ${formData.temperature}°C
+      - Humidity: ${formData.humidity}%
+      - pH Level: ${formData.ph}
+      - Rainfall: ${formData.rainfall} mm
+
+      Task: Determine the single best crop to grow in these conditions.
+      Instruction: Return ONLY the name of the crop as a single string. Do not add punctuation or explanations.
+    `;
+
     try {
-      const response = await fetch("https://yamxxx1-BackendCropix.hf.space/recommend_soil_crop/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          N: parseFloat(formData.N),
-          P: parseFloat(formData.P),
-          K: parseFloat(formData.K),
-          temperature: parseFloat(formData.temperature),
-          humidity: parseFloat(formData.humidity),
-          ph: parseFloat(formData.ph),
-          rainfall: parseFloat(formData.rainfall),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setRecommendation(data.recommended_crop);
+      const crop = await callGroqAPI(prompt);
+      setRecommendation(crop);
     } catch (err) {
-      setError(err.message);
+       if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }
@@ -65,174 +121,53 @@ export default function SoilCropRecommendationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
       <Navigation />
-
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 text-balance leading-tight">
             Soil Crop Recommendation
           </h1>
           <p className="text-base sm:text-lg text-gray-700 leading-relaxed max-w-md mx-auto">
-            Get recommendations for the best crop to grow based on your soil conditions.
+            Get recommendations for the best crop to grow based on your soil conditions using AI.
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <Card className="border-2 border-green-200 shadow-lg hover:shadow-xl transition-shadow duration-200 bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-xl sm:text-2xl text-green-700 font-bold">
-                Enter Soil Conditions
-              </CardTitle>
+              <CardTitle className="text-xl sm:text-2xl text-green-700 font-bold">Enter Soil Conditions</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="N" className="text-sm font-medium text-gray-700">
-                      Nitrogen (N)
-                    </Label>
-                    <Input
-                      id="N"
-                      type="number"
-                      name="N"
-                      value={formData.N}
-                      onChange={handleChange}
-                      placeholder="Enter Nitrogen content"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="P" className="text-sm font-medium text-gray-700">
-                      Phosphorus (P)
-                    </Label>
-                    <Input
-                      id="P"
-                      type="number"
-                      name="P"
-                      value={formData.P}
-                      onChange={handleChange}
-                      placeholder="Enter Phosphorus content"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="K" className="text-sm font-medium text-gray-700">
-                      Potassium (K)
-                    </Label>
-                    <Input
-                      id="K"
-                      type="number"
-                      name="K"
-                      value={formData.K}
-                      onChange={handleChange}
-                      placeholder="Enter Potassium content"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="temperature" className="text-sm font-medium text-gray-700">
-                      Temperature (°C)
-                    </Label>
-                    <Input
-                      id="temperature"
-                      type="number"
-                      name="temperature"
-                      value={formData.temperature}
-                      onChange={handleChange}
-                      placeholder="Enter temperature"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="humidity" className="text-sm font-medium text-gray-700">
-                      Humidity (%)
-                    </Label>
-                    <Input
-                      id="humidity"
-                      type="number"
-                      name="humidity"
-                      value={formData.humidity}
-                      onChange={handleChange}
-                      placeholder="Enter humidity"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ph" className="text-sm font-medium text-gray-700">
-                      pH Value
-                    </Label>
-                    <Input
-                      id="ph"
-                      type="number"
-                      name="ph"
-                      value={formData.ph}
-                      onChange={handleChange}
-                      placeholder="Enter pH value"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="rainfall" className="text-sm font-medium text-gray-700">
-                      Rainfall (mm)
-                    </Label>
-                    <Input
-                      id="rainfall"
-                      type="number"
-                      name="rainfall"
-                      value={formData.rainfall}
-                      onChange={handleChange}
-                      placeholder="Enter rainfall"
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                      required
-                    />
-                  </div>
+                  {[
+                    { id: "N", label: "Nitrogen (N)", placeholder: "Enter Nitrogen content" },
+                    { id: "P", label: "Phosphorus (P)", placeholder: "Enter Phosphorus content" },
+                    { id: "K", label: "Potassium (K)", placeholder: "Enter Potassium content" },
+                    { id: "temperature", label: "Temperature (°C)", placeholder: "Enter temperature" },
+                    { id: "humidity", label: "Humidity (%)", placeholder: "Enter humidity" },
+                    { id: "ph", label: "pH Value", placeholder: "Enter pH value" },
+                    { id: "rainfall", label: "Rainfall (mm)", placeholder: "Enter rainfall" },
+                  ].map((item) => (
+                    <div key={item.id}>
+                      <Label htmlFor={item.id} className="text-sm font-medium text-gray-700">{item.label}</Label>
+                      <Input
+                        id={item.id} 
+                        type="number" 
+                        name={item.id} 
+                        value={formData[item.id]} 
+                        onChange={handleChange} 
+                        placeholder={item.placeholder}
+                        className="border-green-300 focus:border-green-500 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
+                        required
+                      />
+                    </div>
+                  ))}
                 </div>
                 <Button
-                  type="submit"
-                  disabled={loading}
+                  type="submit" disabled={loading}
                   className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3 text-base sm:text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none"
                 >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Recommending...
-                    </div>
-                  ) : (
-                    "Get Recommendation"
-                  )}
+                  {loading ? "Analyzing..." : "Get Recommendation"}
                 </Button>
               </form>
             </CardContent>
@@ -240,25 +175,15 @@ export default function SoilCropRecommendationPage() {
         </motion.div>
 
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
             <Card className="mt-8 border-2 border-red-300 bg-red-50 shadow-lg bg-white/80 backdrop-blur-sm">
-              <CardContent className="pt-6">
-                <p className="text-red-700 text-center">Error: {error}</p>
-              </CardContent>
+              <CardContent className="pt-6"><p className="text-red-700 text-center">Error: {error}</p></CardContent>
             </Card>
           </motion.div>
         )}
 
         {recommendation && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
             <Card className="mt-8 border-2 border-green-300 bg-green-50 shadow-lg animate-in slide-in-from-bottom-4 duration-500 bg-white/80 backdrop-blur-sm">
               <CardContent className="pt-6">
                 <div className="text-center">
