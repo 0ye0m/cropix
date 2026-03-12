@@ -1,152 +1,188 @@
-# CROPIX: Smart Agriculture Solutions
+🌾 CROPIX: Smart Agriculture Solutions
+Next.jsFastAPIAILicense
 
-## Project Overview
-CROPIX is an intelligent agricultural platform designed to empower farmers with data-driven insights for optimized crop management. This project leverages machine learning models to provide recommendations for crop selection, fertilizer application, and soil analysis, ultimately aiming to enhance yield, reduce waste, and promote sustainable farming practices.
+📖 Project Overview
+CROPIX is an intelligent agricultural platform designed to empower farmers with data-driven insights for optimized crop management. By combining traditional Machine Learning models with cutting-edge Large Language Models (LLMs) via Groq, CROPIX provides real-time, context-aware recommendations for crop selection, fertilizer application, and soil analysis.
 
+The Goal: Enhance yield, reduce resource waste, and promote sustainable farming practices through precision agriculture.
 
+✨ Key Features
+1. 🌱 Crop Recommendation
+Suggests the most suitable crops based on soil composition (N, P, K) and environmental factors (Temperature, Humidity, pH, Rainfall).
 
-## Features
-- **Crop Recommendation**: Suggests suitable crops based on soil conditions and environmental factors.
-- **Fertilizer Recommendation**: Recommends optimal fertilizer types and quantities for specific crops and soil.
-- **Soil-Crop Recommendation**: Provides integrated recommendations considering both soil health and crop suitability.
-- **Disease Detection**: (Implied from `Disease-Detection[CNN].py` and `CNN` folder) Identifies crop diseases using image analysis.
-- **Market Forecast**: (Implied from `MARKET_Forecast[LSTM].py`) Predicts market trends for agricultural produce.
-- **Weather Prediction**: (Implied from `Weather_Prediction.py`) Offers weather forecasts relevant to farming.
-- **User-Friendly Interface**: A modern and responsive web application for easy interaction.
+Tech: Uses supervised learning algorithms trained on agricultural datasets.
+AI Enhancement: Falls back to Llama 3.1 via Groq API for broad reasoning if local models are uncertain.
+2. 🧪 Fertilizer Recommendation
+Recommends optimal fertilizer types and quantities.
 
-## Tech Stack
+Input: Crop type and current soil nutrient levels.
+Output: Specific N, P, K requirements to balance soil health.
+Intelligence: Uses LLMs to calculate deficits and recommend exact dosage, replacing simple lookup tables with dynamic reasoning.
+3. 📈 Crop Yield Prediction
+Predicts the expected yield (tonnes/hectare) based on farming inputs.
 
-### Frontend
-The frontend of CROPIX is a robust and interactive web application built with the following technologies:
-- **Next.js**: A React framework for building performant and scalable web applications.
-- **React**: A JavaScript library for building user interfaces.
-- **TypeScript**: A typed superset of JavaScript that compiles to plain JavaScript, enhancing code quality and maintainability.
-- **Tailwind CSS**: A utility-first CSS framework for rapidly building custom designs.
-- **Radix UI**: A collection of unstyled, accessible UI components for building high-quality design systems.
-- **Framer Motion**: A production-ready motion library for React to power animations.
-- **Other Libraries**: `react-hook-form` for form management, `zod` for schema validation, `lucide-react` for icons, `date-fns` for date utilities, `recharts` for data visualization, and `next-themes` for theme management.
+Inputs: Crop type, Season, Area, Fertilizer usage, Pesticide usage, and Rainfall.
+Logic: Analyzes historical trends and resource efficiency ratios to estimate output.
+4. 🌿 Disease Detection
+Identifies crop diseases using image analysis.
 
-### Backend
-The backend of CROPIX is a Python-based API that serves machine learning models and handles data processing:
-- **FastAPI**: A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
-- **Uvicorn**: An ASGI web server, used to run FastAPI applications.
-- **Machine Learning Libraries**:
-    - **Keras / TensorFlow**: For deep learning models, particularly for disease detection (CNN) and market forecasting (LSTM).
-    - **scikit-learn**: A comprehensive library for traditional machine learning algorithms, used for crop and fertilizer recommendations (e.g., Random Forest, KNN).
-    - **XGBoost**: An optimized distributed gradient boosting library designed to be highly efficient, flexible, and portable, likely used for crop yield prediction.
-    - **NumPy & Pandas**: Essential libraries for numerical operations and data manipulation.
-    - **Matplotlib & Seaborn**: For data visualization and analysis (likely used during model development).
-    - **Joblib**: For efficient saving and loading of Python objects, especially large NumPy arrays, used for trained machine learning models.
+Tech: Convolutional Neural Networks (CNN) built with TensorFlow/Keras.
+Usage: Upload an image of the affected leaf to get a diagnosis and remedy.
+5. 📉 Market Forecast & Weather Prediction
+Market: Uses LSTM (Long Short-Term Memory) networks to predict price trends.
+Weather: Aggregates meteorological data to assist in planning sowing and harvesting.
+🧠 Tech Stack & Architecture
+CROPIX uses a Hybrid Intelligence Architecture:
 
-To Get details about ML models refer to this: [Model Documentation](backend/MODEL_DOCUMENTATION.md)
+Local ML Models: Fast and efficient for structured data (Crop/Yield predictions).
+Cloud LLM (Groq): Used for complex reasoning, natural language explanations, and fallback reliability.
+Frontend
+Framework: Next.js 14 (App Router)
+Language: TypeScript
+Styling: Tailwind CSS, Radix UI
+Animation: Framer Motion
+State: React Hooks, React Hook Form
+Backend
+Framework: FastAPI (Python)
+ML Ops:
+scikit-learn & XGBoost for tabular data.
+TensorFlow/Keras for Deep Learning (CNN, LSTM).
+AI Integration: Groq API (Llama 3.1 Models) for inference.
+🧪 Test Cases & Validation
+To verify the system is functioning correctly, use the following test inputs. These are designed to trigger specific logic in both the ML models and the AI fallback system.
 
-## How to Use CROPIX
+Test 1: Fertilizer Recommendation
+Scenario: Testing the system's ability to recommend high nitrogen for a heavy feeder.
 
+Parameter	Input Value	Expected Outcome
+Crop	Rice	Rice is a heavy nitrogen feeder.
+Current N	15	System detects Nitrogen is low.
+Current P	20	Moderate levels.
+Current K	10	Low levels.
+Result	High N Recommendation	AI should recommend N levels > 60-80 to correct the deficit.
+Scenario: Testing logic for Legumes (Nitrogen Fixers).
 
-### 1. Crop Recommendation
-- **How to Use**: Navigate to the 'Crop Recommendation' section. Input your soil's nitrogen, phosphorus, and potassium levels, pH, rainfall, temperature, and humidity. The system will then suggest the best crops for your environment.
+Parameter	Input Value	Expected Outcome
+Crop	Chickpea	Legumes fix their own nitrogen.
+Current N	20	Low input.
+Result	Low N Recommendation	AI should recognize Chickpea needs less Nitrogen than Rice, focusing on Phosphorus instead.
+Test 2: Soil Crop Recommendation
+Scenario: Tropical Wet Conditions.
 
-### 2. Fertilizer Recommendation
-- **How to Use**: Go to the 'Fertilizer Recommendation' section. Select your crop and provide details about your soil's nutrient content. CROPIX will recommend the most effective fertilizer.
+Parameter	Input Value	Expected Outcome
+Temperature	30°C	High temp.
+Humidity	90%	Very high humidity.
+Rainfall	2500 mm	High water availability.
+pH	6.2	Slightly acidic.
+Result	Rice	Ideal conditions for Paddy/Rice cultivation.
+Scenario: Dry/Cool Conditions.
 
-### 3. Soil-Crop Recommendation
-- **How to Use**: In the 'Soil-Crop Recommendation' area, enter your soil parameters. The system will analyze this data to provide a comprehensive recommendation for both soil management and crop choices.
+Parameter	Input Value	Expected Outcome
+Temperature	18°C	Cool.
+Humidity	45%	Low.
+Rainfall	500 mm	Low.
+Result	Wheat / Barley	Suitable for Rabi crops that prefer cooler, drier weather.
+Test 3: Yield Prediction
+Scenario: High Yield Expectation.
 
-### 4. Disease Detection
-- **How to Use**: Upload an image of your affected crop in the 'Disease Detection' section. Our AI model will analyze the image and provide a diagnosis, along with potential remedies.
+Parameter	Input Value	Expected Outcome
+Crop	Rice	-
+Fertilizer	200 kg	High inputs.
+Rainfall	2200 mm	Ideal water.
+Result	High Value	Yield prediction should be > 3.5 tonnes/hectare.
+🚀 Local Installation
+Prerequisites
+Git
+Node.js (v18+)
+Python (3.9+)
+Groq API Key (Get one free at console.groq.com)
+1. Clone the Repository
+git clone https://github.com/0ye0m/cropixcd cropix
+2. Backend Setup
+Navigate to the backend directory and set up the Python environment.
 
-### 5. Market Forecast
-- **How to Use**: Visit the 'Market Forecast' section to view upcoming trends and price predictions for various crops.
+bash
 
-### 6. Weather Prediction
-- **How to Use**: Check the 'Weather Prediction' section for localized weather information and forecasts that can impact your farming activities.
-
-By utilizing these features, you can make more informed decisions, improve crop yield, and enhance the sustainability of your farming practices.
-
-
-## Local Installation
-
-### Prerequisites
-Before you begin, ensure you have the following installed:
-- Git
-- Node.js (LTS version recommended) and npm/yarn/pnpm
-- Python 3.8+ and pip
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/0ye0m/cropix
-```
-
-### 2. Backend Setup
-Navigate to the `backend` directory, create a virtual environment, install dependencies, and set up environment variables.
-
-```bash
 cd backend
+
+# Create virtual environment
 python -m venv venv
-.\venv\Scripts\activate  # On Windows
-# source venv/bin/activate  # On macOS/Linux
+
+# Activate environment
+# Windows:
+.\venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-```
+Environment Variables:
+Create a .env file in the backend/ directory (if your backend uses keys directly). However, in this architecture, the API keys are managed in the Frontend environment for client-side AI calls.
 
-Create a `.env` file in the `backend` directory and add any necessary environment variables (e.g., API keys, database connections). A `temp_images` folder is also present, which might be used for temporary storage of images for disease detection.
+3. Frontend Setup
+Navigate to the frontend directory and configure the AI keys.
 
-### 3. Frontend Setup
-Navigate to the `frontend` directory and install dependencies.
+bash
 
-```bash
 cd ../frontend
-pnpm install # or npm install or yarn install
-```
 
-## Running the Application
+# Install dependencies
+pnpm install 
+# or npm install
 
-### 1. Run the Backend
-From the `backend` directory, start the FastAPI server:
+# Create environment file
+touch .env.local
+Configure .env.local:
+Add your Groq API keys to ensure the recommendation system works. The application uses a fallback mechanism, so add both primary and backup keys if available.
 
-```bash
+env
+
+# Optional: If you want to move keys out of code
+NEXT_PUBLIC_GROQ_KEY_1="gsk_your_primary_key_here"
+NEXT_PUBLIC_GROQ_KEY_2="gsk_your_fallback_key_here"
+(Note: The current implementation expects keys in the code, but for production, environment variables are recommended).
+
+⚡ Running the Application
+1. Start the Backend Server
+The backend serves the ML models for yield and disease detection.
+
+bash
+
 cd backend
-.\venv\Scripts\activate  # On Windows
-# source venv/bin/activate  # On macOS/Linux
+# Ensure venv is active
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-The backend API will be accessible at `http://localhost:8000`.
+Backend runs on http://localhost:8000
 
-### 2. Run the Frontend
-From the `frontend` directory, start the Next.js development server:
+2. Start the Frontend Server
+The frontend handles the UI and Groq API integration.
 
-```bash
+bash
+
 cd frontend
-pnpm run dev # or npm run dev or yarn dev
-```
-The frontend application will be accessible at `http://localhost:3000`.
+pnpm run dev
+Frontend runs on http://localhost:3000
 
-## Project Structure
+📁 Project Structure
+text
 
-```
-Production_CROPIX/
-├── backend/                # FastAPI backend with ML models
-│   ├── main.py             # Main FastAPI application
-│   ├── requirements.txt    # Backend Python dependencies
-│   ├── API_DOCUMENTATION.md # API endpoint documentation
-│   ├── MODEL_DOCUMENTATION.md # Machine learning model documentation
-│   ├── Trained_models/     # Stored machine learning models
+CROPIX/
+├── backend/                # 🐍 FastAPI & ML Logic
+│   ├── main.py             # Entry point for API
+│   ├── requirements.txt    # Python dependencies
+│   ├── Trained_models/     # Serialized .pkl / .h5 models
+│   ├── temp_images/        # Storage for disease detection uploads
 │   └── ...
-├── frontend/               # Next.js frontend application
-│   ├── app/                # Next.js pages and routes
-│   │   ├── crop-recommendation/
-│   │   ├── fertilizer-recommendation/
-│   │   ├── soil-crop-recommendation/
-│   │   ├── disease-detection/
-│   │   ├── market-forecast/
-│   │   ├── weather-forecast/
+│
+├── frontend/               # ⚛️ Next.js Application
+│   ├── app/                # App Router Pages
+│   │   ├── fertilizer-recommendation/ # AI-Driven Fertilizer Logic
+│   │   ├── crop-recommendation/       # ML-Driven Crop Logic
+│   │   ├── disease-detection/         # CNN Model Integration
 │   │   └── ...
-│   ├── components/         # React components (UI, navigation)
-│   ├── public/             # Static assets
-│   ├── styles/             # Global CSS
-│   ├── package.json        # Frontend dependencies
-│   └── ...
-├── Datasets/               # Datasets used for training (e.g., CSV files)
-├── MODELS/                 # Jupyter notebooks or scripts for model development
-└── README.md               # This file
-```
-
+│   ├── components/         # Reusable UI Components
+│   ├── lib/                # Utils and Helpers
+│   └── package.json
+│
+├── Datasets/               # 📊 Raw Data (CSVs)
+├── MODELS/                 # 📓 Jupyter Notebooks (Model Training)
+└── README.md               # 📄 Documentation
