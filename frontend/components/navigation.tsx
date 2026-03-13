@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Leaf, ChevronDown } from "lucide-react"
 import { ModeToggle } from "./ui/mode-toggle"
+import { LanguageSwitcher } from "./language-switcher"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,9 +54,8 @@ export function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`font-medium transition-colors ${
-                  pathname === item.href ? "text-green-600" : "text-gray-700 hover:text-green-600"
-                }`}
+                className={`font-medium transition-colors ${pathname === item.href ? "text-green-600" : "text-gray-700 hover:text-green-600"
+                  }`}
               >
                 {item.label}
               </Link>
@@ -93,12 +93,12 @@ export function Navigation() {
 
             <Link
               href="/disease-detection"
-              className={`font-medium transition-colors ${
-                pathname === "/disease-detection" ? "text-green-600" : "text-gray-700 hover:text-green-600"
-              }`}
+              className={`font-medium transition-colors ${pathname === "/disease-detection" ? "text-green-600" : "text-gray-700 hover:text-green-600"
+                }`}
             >
               Disease Detection
             </Link>
+            <LanguageSwitcher />
             <ModeToggle />
           </nav>
 
@@ -126,9 +126,8 @@ export function Navigation() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`font-medium transition-colors ${
-                    pathname === item.href ? "text-green-600" : "text-gray-700 hover:text-green-600"
-                  }`}
+                  className={`font-medium transition-colors ${pathname === item.href ? "text-green-600" : "text-gray-700 hover:text-green-600"
+                    }`}
                 >
                   {item.label}
                 </Link>
@@ -166,14 +165,16 @@ export function Navigation() {
               <Link
                 href="/disease-detection"
                 onClick={() => setIsOpen(false)}
-                className={`font-medium transition-colors px-4 py-2 ${
-                  pathname === "/disease-detection" ? "text-green-600" : "text-gray-700 hover:text-green-600"
-                }`}
+                className={`font-medium transition-colors px-4 py-2 ${pathname === "/disease-detection" ? "text-green-600" : "text-gray-700 hover:text-green-600"
+                  }`}
               >
                 Disease Detection
               </Link>
               <div className="px-4">
-                <ModeToggle />
+                <div className="px-4 flex items-center gap-4">
+                  <LanguageSwitcher />
+                  <ModeToggle />
+                </div>
               </div>
             </nav>
           </div>

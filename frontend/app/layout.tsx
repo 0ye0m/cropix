@@ -16,17 +16,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
 
-        {/* Google Translate Button */}
-        <div id="google_translate_element" style={{ position: "fixed", top: 10, right: 10, zIndex: 9999 }}></div>
+        {/* Hidden Google Translate Engine */}
+        <div id="google_translate_element" style={{ display: "none" }} />
 
-        {/* Google Translate Script */}
         <Script id="google-translate-init" strategy="afterInteractive">
           {`
             function googleTranslateElementInit() {
@@ -34,7 +33,7 @@ export default function RootLayout({
                 {
                   pageLanguage: 'en',
                   includedLanguages: 'hi',
-                  layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                  autoDisplay: false
                 },
                 'google_translate_element'
               );
