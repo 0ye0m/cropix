@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "next-intl": "^4.8.3",
     "vercel": "^50.29.0"
   }
 }
