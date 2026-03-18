@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import {
   LineChart,
@@ -12,19 +12,109 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
-import { motion } from "framer-motion"
-import { Cloud, Thermometer, Droplets, Loader2 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { motion, AnimatePresence } from "framer-motion"
+import { Cloud, Thermometer, Droplets, Loader2, AlertTriangle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-// --- API CONFIGURATION ---
+// --- API CONFIGURATION (⚠️ SECURITY WARNING: These keys are exposed in the browser!
+// Anyone can steal them. You MUST move this logic to a backend API route.
+// See: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
+// ---
 const GROQ_API_KEYS = [
-  "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",
-  "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"
+  "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",
+  "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"
 ]
 const MODEL_ID = "llama-3.1-8b-instant"
+
+// --- CROP KNOWLEDGE BASE (thresholds & alerts) ---
+interface CropRule {
+  condition: (day: ForecastDay) => boolean;
+  message: string;
+}
+
+const CROP_THRESHOLDS: Record<string, Record<string, CropRule[]>> = {
+  wheat: {
+    germination: [
+      { condition: (day) => day.max_temp_c > 30, message: "High temperature during germination may reduce emergence. Consider light irrigation to cool soil." },
+      { condition: (day) => day.min_temp_c < 5, message: "Low temperature during germination can delay emergence. Protect with mulch if possible." },
+      { condition: (day) => day.chance_of_rain > 70, message: "Heavy rain expected during germination – waterlogging risk. Ensure drainage." }
+    ],
+    vegetative: [
+      { condition: (day) => day.max_temp_c > 35, message: "Heat stress during vegetative growth. Irrigate to maintain soil moisture." },
+      { condition: (day) => day.avg_humidity > 80, message: "High humidity may promote foliar diseases. Monitor for rust or mildew." }
+    ],
+    flowering: [
+      { condition: (day) => day.max_temp_c > 32, message: "High temperature during flowering can reduce pollination. Provide shade or irrigation." },
+      { condition: (day) => day.chance_of_rain > 60, message: "Rain during flowering may wash away pollen. Consider covering if feasible." }
+    ],
+    "grain filling": [
+      { condition: (day) => day.max_temp_c > 35, message: "Extreme heat during grain filling reduces yield. Irrigate to reduce stress." },
+      { condition: (day) => day.min_temp_c < 12, message: "Cool nights during grain filling slow down grain development." }
+    ],
+    maturity: [
+      { condition: (day) => day.chance_of_rain > 50, message: "Rain near maturity may cause lodging or grain sprouting. Plan harvest accordingly." }
+    ]
+  },
+  rice: {
+    germination: [
+      { condition: (day) => day.min_temp_c < 15, message: "Low temperature slows rice germination. Maintain shallow water layer." },
+      { condition: (day) => day.max_temp_c > 38, message: "Very high temperature may inhibit germination. Provide light irrigation." }
+    ],
+    vegetative: [
+      { condition: (day) => day.max_temp_c > 36, message: "Heat stress in vegetative stage. Keep field flooded to cool plants." },
+      { condition: (day) => day.avg_humidity < 50, message: "Low humidity may increase pest incidence. Monitor for planthoppers." }
+    ],
+    flowering: [
+      { condition: (day) => day.max_temp_c > 35, message: "High temperature during flowering causes spikelet sterility. Maintain water depth." },
+      { condition: (day) => day.chance_of_rain > 70, message: "Heavy rain during flowering can damage panicles. Ensure good drainage." }
+    ],
+    "grain filling": [
+      { condition: (day) => day.min_temp_c < 18, message: "Cool nights during grain filling reduce grain weight." }
+    ],
+    maturity: []
+  },
+  maize: {
+    germination: [
+      { condition: (day) => day.min_temp_c < 10, message: "Cold soil delays maize germination. Consider postponing planting." }
+    ],
+    vegetative: [
+      { condition: (day) => day.max_temp_c > 38, message: "Extreme heat during vegetative stage – provide irrigation to avoid wilting." }
+    ],
+    flowering: [
+      { condition: (day) => day.max_temp_c > 36, message: "Heat stress during silking can reduce pollination. Irrigate to cool canopy." },
+      { condition: (day) => day.chance_of_rain > 60, message: "Rain during flowering may interfere with pollination." }
+    ],
+    "grain filling": [
+      { condition: (day) => day.max_temp_c > 35, message: "High temperature during grain fill reduces kernel weight." }
+    ],
+    maturity: []
+  },
+  cotton: {
+    germination: [
+      { condition: (day) => day.min_temp_c < 14, message: "Low temperature delays cotton germination. Wait for warmer conditions." }
+    ],
+    vegetative: [
+      { condition: (day) => day.max_temp_c > 40, message: "Extreme heat may cause square shedding. Increase irrigation frequency." }
+    ],
+    flowering: [
+      { condition: (day) => day.chance_of_rain > 50, message: "Rain during flowering can cause boll rot. Monitor fields." }
+    ],
+    "boll development": [
+      { condition: (day) => day.max_temp_c > 38, message: "Heat stress during boll development reduces lint quality." }
+    ],
+    maturity: []
+  }
+};
 
 // --- TYPES ---
 interface ForecastDay {
@@ -51,29 +141,89 @@ export default function WeatherForecastPage() {
   const [warning, setWarning] = useState<string | null>(null)
   const [aiInsight, setAiInsight] = useState<string>("")
 
+  // New state for crop advisories
+  const [selectedCrop, setSelectedCrop] = useState<string>("")
+  const [selectedStage, setSelectedStage] = useState<string>("")
+  const [cropAlerts, setCropAlerts] = useState<string[]>([])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(e.target.value)
   }
 
   const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDays = parseInt(e.target.value)
-    if (newDays > 6) {
-      setDays(6)
-      setWarning("Only a 6-day forecast is available. Displaying 6 days.")
-    } else if (newDays < 1) {
-      setDays(1)
-    } else {
-      setDays(newDays)
-      setWarning(null)
-    }
-  }
+    const rawValue = e.target.value;
 
-  // --- GROQ API INTEGRATION ---
+    // If the input is cleared, fallback to 1
+    if (rawValue === '') {
+      setDays(1);
+      setWarning(null);
+      return;
+    }
+
+    const newDays = parseInt(rawValue, 10);
+
+    // If parsing fails, fallback to 1
+    if (isNaN(newDays)) {
+      setDays(1);
+      setWarning(null);
+      return;
+    }
+
+    // Apply min/max limits
+    if (newDays > 6) {
+      setDays(6);
+      setWarning("Only a 6-day forecast is available. Displaying 6 days.");
+    } else if (newDays < 1) {
+      setDays(1);
+      setWarning(null);
+    } else {
+      setDays(newDays);
+      setWarning(null);
+    }
+  };
+
+  // --- CROP ALERT GENERATION ---
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!weatherData || !selectedCrop || !selectedStage) {
+      setCropAlerts([]);
+      return;
+    }
+
+    const rules = CROP_THRESHOLDS[selectedCrop]?.[selectedStage];
+    if (!rules || rules.length === 0) {
+      setCropAlerts([]);
+      return;
+    }
+
+    const alerts: string[] = [];
+    weatherData.forecast.forEach(day => {
+      rules.forEach(rule => {
+        if (rule.condition(day)) {
+          const msg = `[${day.date}] ${rule.message}`;
+          if (!alerts.includes(msg)) alerts.push(msg);
+        }
+      });
+    });
+
+    if (isMounted) setCropAlerts(alerts);
+
+    return () => { isMounted = false; };
+  }, [weatherData, selectedCrop, selectedStage]);
+
+  // --- GROQ API INTEGRATION (enhanced with crop info) ---
   const getAIInsight = async (data: WeatherData) => {
     let lastError: Error | null = null;
+    const cropContext = selectedCrop && selectedStage
+      ? `The user is interested in ${selectedCrop} at the ${selectedStage} stage.`
+      : "The user has not specified a crop.";
+
     const prompt = `
       Act as an expert agricultural meteorologist. Analyze the following ${data.forecast.length}-day weather forecast for ${data.city_name}.
       Data: ${JSON.stringify(data.forecast)}
+      
+      ${cropContext}
       
       Task: Provide a concise agricultural insight (3-4 sentences). 
       1. Validate if the weather conditions are suitable for typical farming activities.
@@ -100,7 +250,7 @@ export default function WeatherForecastPage() {
       }
     }
     setAiInsight("Could not generate AI insight at this moment.");
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -109,6 +259,7 @@ export default function WeatherForecastPage() {
     setWeatherData(null)
     setAiInsight("")
     setWarning(null)
+    setCropAlerts([])
 
     const daysToSend = days > 6 ? 6 : days
 
@@ -123,7 +274,6 @@ export default function WeatherForecastPage() {
 
       const data: WeatherData = await response.json()
       
-      // Validation Logic
       if (!data.forecast || data.forecast.length === 0) {
         throw new Error("No forecast data received for this location.")
       }
@@ -133,7 +283,6 @@ export default function WeatherForecastPage() {
       }
 
       setWeatherData(data)
-      // Trigger AI Analysis
       getAIInsight(data)
 
     } catch (err) {
@@ -141,7 +290,7 @@ export default function WeatherForecastPage() {
     } finally {
       setLoading(false)
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
@@ -156,7 +305,7 @@ export default function WeatherForecastPage() {
         >
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Weather Forecast</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Real-time weather predictions powered by AI analysis.
+            Real-time weather predictions with crop‑specific advisories.
           </p>
         </motion.div>
 
@@ -202,6 +351,68 @@ export default function WeatherForecastPage() {
 
         {weatherData && (
           <div className="grid grid-cols-1 gap-8">
+            {/* Crop & Stage Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="crop">Select Crop (optional)</Label>
+                <Select value={selectedCrop} onValueChange={setSelectedCrop}>
+                  <SelectTrigger id="crop" className="bg-input border-border">
+                    <SelectValue placeholder="Choose a crop" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wheat">Wheat</SelectItem>
+                    <SelectItem value="rice">Rice</SelectItem>
+                    <SelectItem value="maize">Maize</SelectItem>
+                    <SelectItem value="cotton">Cotton</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="stage">Growth Stage</Label>
+                <Select value={selectedStage} onValueChange={setSelectedStage} disabled={!selectedCrop}>
+                  <SelectTrigger id="stage" className="bg-input border-border">
+                    <SelectValue placeholder="Select stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedCrop && Object.keys(CROP_THRESHOLDS[selectedCrop] || {}).map(stage => (
+                      <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Crop Alerts Card with AnimatePresence */}
+            <AnimatePresence>
+              {selectedCrop && selectedStage && (
+                <motion.div
+                  key="crop-alerts"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-bold text-amber-800 dark:text-amber-300 mb-2">
+                        Crop Advisory for {selectedCrop} ({selectedStage})
+                      </h3>
+                      {cropAlerts.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-200 space-y-1">
+                          {cropAlerts.map((alert, idx) => <li key={idx}>{alert}</li>)}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-amber-700 dark:text-amber-200">
+                          No specific alerts for this crop and stage based on the forecast.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Temperature Chart */}
             <motion.div
               className="bg-card rounded-2xl shadow-lg border border-border p-6"
@@ -224,21 +435,26 @@ export default function WeatherForecastPage() {
               </ResponsiveContainer>
             </motion.div>
 
-            {/* AI Insight Card */}
-            {aiInsight && (
-              <motion.div
-                className="bg-primary/10 border border-primary/30 rounded-lg p-4"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              >
-                <div className="flex items-start gap-3">
-                  <Cloud className="w-6 h-6 text-primary mt-1 shrink-0" />
-                  <div>
-                    <h3 className="font-bold text-primary mb-1">AI Agricultural Insight</h3>
-                    <p className="text-sm text-foreground/80">{aiInsight}</p>
+            {/* AI Insight Card with AnimatePresence */}
+            <AnimatePresence>
+              {aiInsight && (
+                <motion.div
+                  key="ai-insight"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-primary/10 border border-primary/30 rounded-lg p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <Cloud className="w-6 h-6 text-primary mt-1 shrink-0" />
+                    <div>
+                      <h3 className="font-bold text-primary mb-1">AI Agricultural Insight</h3>
+                      <p className="text-sm text-foreground/80">{aiInsight}</p>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Forecast Cards */}
             <motion.div
@@ -255,7 +471,7 @@ export default function WeatherForecastPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {weatherData.forecast.map((day, index) => (
                   <motion.div
-                    key={index}
+                    key={day.date + index} // stable key
                     className="bg-muted/50 border border-border p-4 rounded-lg text-center"
                     whileHover={{ scale: 1.02 }}
                   >

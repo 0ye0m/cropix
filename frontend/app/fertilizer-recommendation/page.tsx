@@ -28,8 +28,8 @@ interface FertilizerRecommendation {
 
 // --- API CONFIGURATION ---
 const GROQ_API_KEYS = [
-  "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", // Primary Key
-  "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"  // Fallback Key
+  "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", // Primary Key
+  "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"  // Fallback Key
 ];
 
 const MODEL_ID = "llama-3.1-8b-instant"; // Updated Model ID
