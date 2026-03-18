@@ -146,8 +146,6 @@ NEXT_PUBLIC_GROQ_KEY_2="gsk_your_fallback_key_here"
 1. Start the Backend Server
 The backend serves the ML models for yield and disease detection.
 
-bash
-
 cd backend
 # Ensure venv is active
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -155,8 +153,6 @@ Backend runs on http://localhost:8000
 
 2. Start the Frontend Server
 The frontend handles the UI and Groq API integration.
-
-bash
 
 cd frontend
 pnpm run dev
