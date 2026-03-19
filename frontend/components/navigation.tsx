@@ -91,13 +91,13 @@ export function Navigation() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link
+            {/* <Link
               href="/disease-detection"
               className={`font-medium transition-colors ${pathname === "/disease-detection" ? "text-green-600" : "text-gray-700 hover:text-green-600"
                 }`}
             >
               Disease Detection
-            </Link>
+            </Link> */}
             <LanguageSwitcher />
             <ModeToggle />
           </nav>
@@ -162,14 +162,14 @@ export function Navigation() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Link
+              {/* <Link
                 href="/disease-detection"
                 onClick={() => setIsOpen(false)}
                 className={`font-medium transition-colors px-4 py-2 ${pathname === "/disease-detection" ? "text-green-600" : "text-gray-700 hover:text-green-600"
                   }`}
               >
                 Disease Detection
-              </Link>
+              </Link> */}
               <div className="px-4">
                 <div className="px-4 flex items-center gap-4">
                   <LanguageSwitcher />
