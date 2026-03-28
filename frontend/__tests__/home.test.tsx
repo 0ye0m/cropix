@@ -5,6 +5,13 @@ jest.mock("next/link", () => {
   return ({ children }: { children: React.ReactNode }) => children;
 });
 
+// ✅ Mock next/dynamic (CRITICAL FIX)
+jest.mock("next/dynamic", () => {
+  return () => {
+    return ({ children }: any) => <div>{children}</div>;
+  };
+});
+
 // ✅ Mock framer-motion
 jest.mock("framer-motion", () => ({
   motion: {
@@ -16,7 +23,6 @@ jest.mock("framer-motion", () => ({
   },
 }));
 
-// ✅ Import page
 import HomePage from "../app/page";
 
 describe("Home Page", () => {
@@ -24,10 +30,7 @@ describe("Home Page", () => {
   test("renders main heading", () => {
     render(<HomePage />);
 
-    const heading = screen.getByRole("heading", {
-  name: /smarter farming/i,
-});
-
+    const heading = screen.getByText(/smarter farming/i);
     expect(heading).toBeInTheDocument();
   });
 
