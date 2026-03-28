@@ -18,10 +18,13 @@ jobs:
         with:
           node-version: 18
 
+      # 🔥 FIXED INSTALL STEP
       - name: Install dependencies
         run: |
           cd frontend
-          npm install
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Build project
         run: |
@@ -35,4 +38,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./frontend"
-          output_location: "out"   
+          output_location: "out"
