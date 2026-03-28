@@ -2,28 +2,32 @@ import { render, screen } from "@testing-library/react";
 
 // ✅ Mock next/link
 jest.mock("next/link", () => {
-  return ({ children }) => children;
+  return ({ children }: { children: React.ReactNode }) => children;
 });
 
-// ✅ Mock framer-motion (important)
+// ✅ Mock framer-motion
 jest.mock("framer-motion", () => ({
   motion: {
-    div: ({ children }) => <div>{children}</div>,
-    h1: ({ children }) => <h1>{children}</h1>,
-    span: ({ children }) => <span>{children}</span>,
-    p: ({ children }) => <p>{children}</p>,
-    footer: ({ children }) => <footer>{children}</footer>,
+    div: ({ children }: any) => <div>{children}</div>,
+    h1: ({ children }: any) => <h1>{children}</h1>,
+    span: ({ children }: any) => <span>{children}</span>,
+    p: ({ children }: any) => <p>{children}</p>,
+    footer: ({ children }: any) => <footer>{children}</footer>,
   },
 }));
 
-// ✅ Import your page
+// ✅ Import page
 import HomePage from "../app/page";
 
 describe("Home Page", () => {
+
   test("renders main heading", () => {
     render(<HomePage />);
 
-    const heading = screen.getByText(/smarter farming/i);
+    const heading = screen.getByText((text) =>
+      text.toLowerCase().includes("smarter farming")
+    );
+
     expect(heading).toBeInTheDocument();
   });
 
@@ -40,4 +44,5 @@ describe("Home Page", () => {
     const feature = screen.getByText(/crop yield prediction/i);
     expect(feature).toBeInTheDocument();
   });
+
 });
