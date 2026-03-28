@@ -8,7 +8,7 @@ on:
 jobs:
   build_and_deploy_job:
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    name: Build, Test and Deploy Job
 
     steps:
       - uses: actions/checkout@v3
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 20   # ⭐ FIX HERE
+          node-version: 20
 
       - name: Install dependencies
         run: |
@@ -25,6 +25,12 @@ jobs:
           rm -f package-lock.json
           rm -f ../package-lock.json
           npm install --legacy-peer-deps
+
+      # 🔥 ADD TEST STEP HERE
+      - name: Run Tests
+        run: |
+          cd frontend
+          npm test
 
       - name: Build project
         run: |
