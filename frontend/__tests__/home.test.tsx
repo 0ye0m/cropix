@@ -24,9 +24,9 @@ describe("Home Page", () => {
   test("renders main heading", () => {
     render(<HomePage />);
 
-    const heading = screen.getByText((text) =>
-      text.toLowerCase().includes("smarter farming")
-    );
+    const heading = screen.getByRole("heading", {
+  name: /smarter farming/i,
+});
 
     expect(heading).toBeInTheDocument();
   });
