@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // --- API CONFIGURATION ---
 const GROQ_API_KEYS = [
-  "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",
+  "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",
   "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"
 ]
 const MODEL_ID = "llama-3.1-8b-instant"
