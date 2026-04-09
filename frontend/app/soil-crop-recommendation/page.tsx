@@ -22,7 +22,7 @@ interface SoilFormData {
 
 // --- API CONFIGURATION ---
 const GROQ_API_KEYS = [
-  "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", 
+  "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", 
   "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"  
 ];
 
