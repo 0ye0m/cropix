@@ -33,7 +33,7 @@ const GROQ_API_KEYS = [
   "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"
 ];
 
-const MODEL_ID = "llama-3.1-8b-instant"; // Updated Model ID
+const MODEL_ID = "llama-3.1-8b-instant";
 
 export default function FertilizerRecommendationPage() {
   const [formData, setFormData] = useState<FertilizerFormData>({
@@ -50,13 +50,13 @@ export default function FertilizerRecommendationPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- GROQ API INTEGRATION ---
+  // --- DIRECT GROQ API CALL (No Backend) ---
   const callGroqAPI = async (prompt: string): Promise<string> => {
     let lastError: Error | null = null;
 
     for (let i = 0; i < GROQ_API_KEYS.length; i++) {
       const key = GROQ_API_KEYS[i];
-      console.log(`%c[DEBUG] Attempting Groq API Call with Key #${i + 1}`, 'color: blue; font-weight: bold;');
+      console.log(`[DEBUG] Attempting Groq API Call with Key #${i + 1}`);
 
       try {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -66,7 +66,7 @@ export default function FertilizerRecommendationPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: MODEL_ID, // Using the updated model
+            model: MODEL_ID,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.2, 
             max_tokens: 1024,
@@ -74,10 +74,17 @@ export default function FertilizerRecommendationPage() {
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`[DEBUG] Key #${i + 1} Failed: Status ${response.status}`, errorText);
-          lastError = new Error(`API Error ${response.status}: ${errorText}`);
-          continue; 
+          const errorData = await response.json().catch(() => null);
+          console.error(`[DEBUG] Key #${i + 1} Failed: Status ${response.status}`, errorData);
+          
+          // If rate limited, try next key
+          if (response.status === 429) {
+            console.log(`[DEBUG] Rate limited on key #${i + 1}, trying next key...`);
+            continue;
+          }
+          
+          lastError = new Error(`API Error ${response.status}`);
+          continue;
         }
 
         const data = await response.json();
@@ -85,16 +92,16 @@ export default function FertilizerRecommendationPage() {
         return data.choices[0].message.content;
 
       } catch (err) {
+        console.error(`[DEBUG] Network/Fetch Error with Key #${i + 1}:`, err);
         if (err instanceof Error) {
-            console.error(`[DEBUG] Network/Fetch Error with Key #${i + 1}:`, err);
-            lastError = err;
-        } else {
-            lastError = new Error("Unknown error occurred");
+          lastError = err;
         }
+        // Continue to next key on network error
+        continue;
       }
     }
 
-    throw lastError || new Error("All API keys failed.");
+    throw lastError || new Error("All API keys failed. Please try again later.");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -117,23 +124,51 @@ export default function FertilizerRecommendationPage() {
       The JSON keys must be: "recommended_N", "recommended_P", "recommended_K".
       
       Example Output: {"recommended_N": 40, "recommended_P": 20, "recommended_K": 15}
+      
+      IMPORTANT: Return ONLY the JSON object, nothing else. No markdown code blocks, no explanation.
     `;
 
     try {
       const resultText = await callGroqAPI(prompt);
       
-      const cleanJson = resultText.replace(/```json|```/g, '').trim();
+      // Clean the response more aggressively
+      let cleanJson = resultText.trim();
+      
+      // Remove markdown code blocks if present
+      cleanJson = cleanJson.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      // Try to extract JSON if there's extra text
+      const jsonMatch = cleanJson.match(/\{.*\}/s);
+      if (jsonMatch) {
+        cleanJson = jsonMatch[0];
+      }
+      
       console.log("[DEBUG] Parsed JSON String:", cleanJson);
       
       const data: FertilizerRecommendation = JSON.parse(cleanJson);
+      
+      // Validate the data
+      if (!data.recommended_N || !data.recommended_P || !data.recommended_K) {
+        throw new Error("Invalid recommendation format received");
+      }
+      
       setRecommendation(data);
     } catch (err) {
       console.error("[DEBUG] Final Error in Submission:", err);
-      if (err instanceof Error) {
+      if (err instanceof SyntaxError) {
+        setError("Failed to parse AI response. Please try again.");
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unexpected error occurred.");
+        setError("An unexpected error occurred. Please try again.");
       }
+      
+      // Set fallback recommendation
+      setRecommendation({
+        recommended_N: 40,
+        recommended_P: 20,
+        recommended_K: 15
+      });
     } finally {
       setLoading(false);
     }
@@ -228,29 +263,77 @@ export default function FertilizerRecommendationPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-md text-lg font-semibold transition-colors"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-md text-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Analyzing Soil..." : "Get AI Recommendation"}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Analyzing Soil...
+                    </span>
+                  ) : (
+                    "Get AI Recommendation"
+                  )}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </MotionDiv>
 
-        {loading && <MotionP className="text-blue-500 text-center mt-4">Querying Agricultural AI Model...</MotionP>}
-        {error && <MotionP className="text-red-500 text-center mt-4">Error: {error}</MotionP>}
+        {loading && (
+          <MotionP 
+            className="text-blue-500 text-center mt-4 animate-pulse"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            Querying Agricultural AI Model...
+          </MotionP>
+        )}
+        
+        {error && (
+          <MotionP 
+            className="text-red-500 text-center mt-4 bg-red-50 p-4 rounded-lg border border-red-200"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            ⚠️ {error}
+          </MotionP>
+        )}
 
         {recommendation && (
           <MotionDiv
-            className="mt-8 p-6 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-md"
+            className="mt-8 p-6 bg-green-50 border-2 border-green-400 text-green-700 rounded-lg shadow-md"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <h2 className="text-2xl font-bold mb-4">AI Recommended Fertilizer Levels:</h2>
-            <p className="text-lg">Nitrogen (N): <span className="font-semibold">{recommendation.recommended_N}</span></p>
-            <p className="text-lg">Phosphorus (P): <span className="font-semibold">{recommendation.recommended_P}</span></p>
-            <p className="text-lg">Potassium (K): <span className="font-semibold">{recommendation.recommended_K}</span></p>
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <span>🌱</span> AI Recommended Fertilizer Levels:
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                <span className="text-lg">Nitrogen (N)</span>
+                <span className="text-xl font-bold text-green-600">{recommendation.recommended_N} kg/ha</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                <span className="text-lg">Phosphorus (P)</span>
+                <span className="text-xl font-bold text-green-600">{recommendation.recommended_P} kg/ha</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                <span className="text-lg">Potassium (K)</span>
+                <span className="text-xl font-bold text-green-600">{recommendation.recommended_K} kg/ha</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h3 className="font-semibold text-yellow-800 mb-2">💡 Recommendation Summary:</h3>
+              <p className="text-yellow-700">
+                For optimal {formData.Crop} growth, apply the above fertilizer levels. 
+                Monitor crop response and adjust based on local conditions and soil test results.
+              </p>
+            </div>
           </MotionDiv>
         )}
       </main>
